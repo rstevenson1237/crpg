@@ -1,0 +1,28 @@
+{
+  "character_id": "char_mage_lyria",
+  "display_name": "Lyria",
+  "class_id": "mage",
+  "sprite_sheet": "procedural",
+  "portrait": "procedural",
+  "base_stats": {
+    "hp": 20,
+    "max_hp": 20,
+    "speed": 4,
+    "attack": 3,
+    "defense": 2,
+    "magic": 9
+  },
+  "stat_bonuses": {},
+  "abilities_unlocked": [],
+  "equipment": {
+    "weapon": null,
+    "off_hand": null,
+    "armor": null,
+    "helm": null,
+    "accessory_1": null,
+    "accessory_2": null
+  },
+  "status_effects": [],
+  "use_tracked_skills": {},
+  "position": { "map_id": "test_town", "tile_x": 20, "tile_y": 21, "floor": 0 }
+}

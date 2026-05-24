@@ -1,0 +1,28 @@
+{
+  "character_id": "char_fighter_aldric",
+  "display_name": "Aldric",
+  "class_id": "fighter",
+  "sprite_sheet": "procedural",
+  "portrait": "procedural",
+  "base_stats": {
+    "hp": 35,
+    "max_hp": 35,
+    "speed": 5,
+    "attack": 7,
+    "defense": 6,
+    "magic": 1
+  },
+  "stat_bonuses": {},
+  "abilities_unlocked": [],
+  "equipment": {
+    "weapon": null,
+    "off_hand": "item_torch",
+    "armor": null,
+    "helm": null,
+    "accessory_1": null,
+    "accessory_2": null
+  },
+  "status_effects": [],
+  "use_tracked_skills": {},
+  "position": { "map_id": "test_town", "tile_x": 20, "tile_y": 20, "floor": 0 }
+}
