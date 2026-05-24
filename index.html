@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 6</title>
+  <title>CRPG Engine — Phase 7</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -31,6 +31,9 @@ import { Weather, WEATHER_CYCLE } from './engine/weather.js';
 import { Events }               from './engine/events.js';
 import { NPCs }                 from './engine/npc.js';
 import { Dialogue }             from './engine/dialogue.js';
+import { Secrets }              from './engine/secrets.js';
+import { Factions }             from './engine/factions.js';
+import { Journal }              from './ui/journal.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -61,7 +64,7 @@ let narrationCard = null;  // { title, text, onDismiss, startMs }
 let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
 
 // ─── Phase 6: Dialogue ────────────────────────────────────────────────────────
-// Dialogue is managed by the Dialogue module. isOpen() checked in the tick loop.
+// Dialogue and Journal are managed by their modules. isOpen() checked in tick loop.
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
@@ -86,8 +89,23 @@ async function init() {
   movement = new MovementController(input, mapData, party, camera, GameState);
   movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
 
+  // ── Phase 7: Secrets & Factions ──
+  const [secretsData, factionsData] = await Promise.all([
+    fetch('/data/secrets/test_secrets.json').then(r => r.json()),
+    fetch('/data/factions/test_factions.json').then(r => r.json()),
+  ]);
+  Secrets.load(secretsData);
+  Factions.load(factionsData);
+
+  Events.setSecretHandlers(
+    id         => Secrets.grant(id),
+    id         => Secrets.revoke(id)
+  );
+  Events.setFactionHandler((id, delta) => Factions.modify(id, delta));
+
   // ── Phase 6: NPC system init ──
   Dialogue.init(renderer, input);
+  Journal.init(renderer, input);
 
   const npcsData = await fetch('/data/npcs/test_npcs.json').then(r => r.json());
   NPCs.load(npcsData);
@@ -184,6 +202,15 @@ async function init() {
       return;  // block movement while dialogue is open
     }
 
+    // ── Phase 7: Journal input handling ──
+    if (Journal.isOpen()) {
+      for (const code of ['Escape','KeyJ','Digit1','Digit2','Digit3','Digit4','ArrowUp','ArrowDown']) {
+        if (input.wasKeyPressed(code)) Journal.handleKey(code);
+      }
+      input.clearFrameState();
+      return;  // block movement while journal is open
+    }
+
     const prevTurn = GameState.currentTurn;
     movement.tick(deltaMs);
     const movementDelta = GameState.currentTurn - prevTurn;
@@ -199,6 +226,12 @@ async function init() {
       // Update facing even when stationary (player turns in place)
       NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
     }
+
+    // J — toggle journal
+    if (input.wasKeyPressed('KeyJ')) Journal.toggle();
+
+    // F — spatial secret search around player
+    if (input.wasKeyPressed('KeyF')) Secrets.search(mapData, movement.leadX, movement.leadY);
 
     // T — advance 12 turns (~2 in-world hours) without moving
     if (input.wasKeyPressed('KeyT')) {
@@ -273,11 +306,13 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 6 — NPC System, Schedules & Dialogue loaded.');
-  console.log('  T = advance 12 turns  |  W = cycle weather  |  F1 = debug overlay  |  L = world log');
+  console.log('Phase 7 — Secrets, Factions & Journal loaded.');
+  console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
+  console.log('  J = journal (Secrets / Factions / World Log / Party tabs)');
+  console.log('  F = search nearby for hidden secrets  (try tile 8,8 for the hidden cellar)');
   console.log('  Walk to Elder Maris at tile (15,10) and press E to talk.');
-  console.log('  In console: GameState.addSecret("secret_warden_letter") to unlock secret dialogue option.');
-  console.log('  NPCs.despawn("npc_town_elder") removes elder from map.');
+  console.log('  In console: Secrets.grant("secret_warden_letter") unlocks secret dialogue option.');
+  console.log('  In console: Factions.modify("faction_town_guard", 20) raises guard standing.');
 }
 
 // ─── Build light sources from party equipment ─────────────────────────────────
@@ -407,23 +442,21 @@ function renderUI(deltaMs = 0) {
   // ── World log panel (L key) ──
   if (worldLogVisible) _renderWorldLog(ctx);
 
-  // ── Dialogue layer: narration card, dialogue box, or interaction prompt ──
+  // ── Dialogue layer: narration card → dialogue → journal → interaction prompt ──
+  const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
   if (narrationCard) {
-    _renderNarrationCard(
-      renderer.getLayerContext(LAYER.DIALOGUE),
-      narrationCard,
-      performance.now() - narrationCard.startMs
-    );
+    _renderNarrationCard(dctx, narrationCard, performance.now() - narrationCard.startMs);
   } else if (Dialogue.isOpen()) {
     Dialogue.update(deltaMs);
     Dialogue.render();
+  } else if (Journal.isOpen()) {
+    Journal.render();
   } else {
     // Interaction / talk prompt for the facing target
     const npcTgt = movement?.npcInteractTarget ?? null;
     const objTgt = movement?.interactTarget ?? null;
     const tgt    = npcTgt || objTgt;
     if (tgt) {
-      const dctx   = renderer.getLayerContext(LAYER.DIALOGUE);
       const screen = npcTgt
         ? camera.worldToScreen(npcTgt.tileX, npcTgt.tileY)
         : camera.worldToScreen(objTgt.tile_x, objTgt.tile_y);
@@ -432,14 +465,20 @@ function renderUI(deltaMs = 0) {
       const tw = dctx.measureText(msg).width + 12;
       const bx = screen.x + 16 - tw / 2;
       const by = screen.y - 20;
-      dctx.fillStyle   = 'rgba(0,0,0,0.82)';
+      dctx.fillStyle    = 'rgba(0,0,0,0.82)';
       dctx.fillRect(bx, by, tw, 14);
-      dctx.fillStyle   = npcTgt ? '#88ffcc' : '#ffff88';
-      dctx.textAlign   = 'center';
+      dctx.fillStyle    = npcTgt ? '#88ffcc' : '#ffff88';
+      dctx.textAlign    = 'center';
       dctx.textBaseline = 'top';
       dctx.fillText(msg, screen.x + 16, by + 2);
     }
   }
+
+  // ── Phase 7: Toasts (always render, above everything) ──
+  Secrets.updateToast(deltaMs);
+  Factions.updateToast(deltaMs);
+  Secrets.renderToast(dctx, 8);
+  Factions.renderToast(dctx, 36);
 }
 
 // ─── Narration card ────────────────────────────────────────────────────────────

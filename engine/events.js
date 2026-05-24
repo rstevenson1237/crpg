@@ -13,11 +13,14 @@ import { GameState } from './gamestate.js';
 
 // ─── Module-level state ──────────────────────────────────────────────────────
 
-let _narrationHandler  = null;  // (title, text, onDismiss) => void
-let _screenFadeHandler = null;  // (direction, color, durationMs, onDone) => void
-let _dialogueHandler   = null;  // (npcId, rootNodeId, onClose) => void
-let _npcSpawnHandler   = null;  // (npcId, mapId, x, y) => void
-let _npcDespawnHandler = null;  // (npcId) => void
+let _narrationHandler   = null;  // (title, text, onDismiss) => void
+let _screenFadeHandler  = null;  // (direction, color, durationMs, onDone) => void
+let _dialogueHandler    = null;  // (npcId, rootNodeId, onClose) => void
+let _npcSpawnHandler    = null;  // (npcId, mapId, x, y) => void
+let _npcDespawnHandler  = null;  // (npcId) => void
+let _secretGrantHandler = null;  // (secretId) => void
+let _secretRevokeHandler= null;  // (secretId) => void
+let _factionHandler     = null;  // (factionId, delta) => void
 let _mapDataRef  = null;
 let _gameTimeRef = null;
 let _weatherRef  = null;
@@ -45,6 +48,11 @@ export const Events = {
     _npcSpawnHandler   = spawnFn;
     _npcDespawnHandler = despawnFn;
   },
+  setSecretHandlers(grantFn, revokeFn) {
+    _secretGrantHandler  = grantFn;
+    _secretRevokeHandler = revokeFn;
+  },
+  setFactionHandler(fn) { _factionHandler = fn; },
   setMapData(md)   { _mapDataRef  = md; },
   setGameTime(gt)  { _gameTimeRef = gt; },
   setWeather(w)    { _weatherRef  = w; },
@@ -286,11 +294,13 @@ function _executeAction(action, next) {
       next(); break;
 
     case 'grant_secret':
-      gs.addSecret(action.secret_id);
+      if (_secretGrantHandler) _secretGrantHandler(action.secret_id);
+      else gs.addSecret(action.secret_id);
       next(); break;
 
     case 'revoke_secret':
-      gs.secrets.delete(action.secret_id);
+      if (_secretRevokeHandler) _secretRevokeHandler(action.secret_id);
+      else gs.secrets.delete(action.secret_id);
       next(); break;
 
     case 'add_world_log_entry':
@@ -299,7 +309,8 @@ function _executeAction(action, next) {
       next(); break;
 
     case 'modify_npc_faction_standing':
-      gs.modifyFaction(action.faction_id, action.delta);
+      if (_factionHandler) _factionHandler(action.faction_id, action.delta);
+      else gs.modifyFaction(action.faction_id, action.delta);
       next(); break;
 
     // ── Map mutations ─────────────────────────────────────────────────────

@@ -2416,6 +2416,25 @@
   ],
   "objects": [
     {
+      "object_id": "obj_hidden_cellar_door",
+      "object_type": "hidden_passage",
+      "tile_x": 8,
+      "tile_y": 8,
+      "floor": 0,
+      "facing": null,
+      "sprite": null,
+      "passable": true,
+      "interactable": false,
+      "interaction_type": "hidden_passage",
+      "state": "hidden",
+      "requires_class": null,
+      "requires_item": null,
+      "secret_id": "secret_hidden_cellar",
+      "search_dc": 8,
+      "on_interact_event": null,
+      "on_open_event": null
+    },
+    {
       "object_id": "obj_locked_chest_01",
       "object_type": "chest_locked",
       "tile_x": 16,
