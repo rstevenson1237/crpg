@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 2</title>
+  <title>CRPG Engine — Phase 3</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -21,156 +21,160 @@ import { Camera } from './engine/camera.js';
 import { Input } from './engine/input.js';
 import { GameLoop } from './engine/gameloop.js';
 import { loadMap, MapRenderer } from './engine/map.js';
+import { Character } from './engine/character.js';
+import { Party } from './engine/party.js';
+import { MovementController } from './engine/movement.js';
+import { GameState } from './engine/gamestate.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
-const renderer    = new Renderer();
-const camera      = new Camera();
-const loop        = new GameLoop(100);
-const input       = new Input(renderer.canvas, camera, () => renderer.scale);
+const renderer = new Renderer();
+const camera   = new Camera();
+const loop     = new GameLoop(100);
+const input    = new Input(renderer.canvas, camera, () => renderer.scale);
 
 // ─── Game State ───────────────────────────────────────────────────────────────
-let mapData     = null;
-let mapRenderer = null;
-let playerTileX = 20;
-let playerTileY = 20;
-let playerFacing = 'south';
+let mapData      = null;
+let mapRenderer  = null;
+let party        = null;
+let movement     = null;
 let debugOverlay = false;   // toggled by F1
 
-// ─── Movement ─────────────────────────────────────────────────────────────────
-const MOVE_KEYS = {
-  KeyW:      { dx:  0, dy: -1, facing: 'north' },
-  ArrowUp:   { dx:  0, dy: -1, facing: 'north' },
-  KeyS:      { dx:  0, dy:  1, facing: 'south' },
-  ArrowDown: { dx:  0, dy:  1, facing: 'south' },
-  KeyA:      { dx: -1, dy:  0, facing: 'west'  },
-  ArrowLeft: { dx: -1, dy:  0, facing: 'west'  },
-  KeyD:      { dx:  1, dy:  0, facing: 'east'  },
-  ArrowRight:{ dx:  1, dy:  0, facing: 'east'  },
-};
-
-function handleMovement() {
-  if (!mapData) return;
-
-  for (const [code, move] of Object.entries(MOVE_KEYS)) {
-    if (input.wasKeyPressed(code)) {
-      const nx = playerTileX + move.dx;
-      const ny = playerTileY + move.dy;
-
-      // Always update facing direction
-      playerFacing = move.facing;
-
-      if (mapData.isPassable(nx, ny, mapData.currentFloor)) {
-        playerTileX = nx;
-        playerTileY = ny;
-        camera.setTarget(playerTileX, playerTileY);
-        console.log(`Player tile: ${playerTileX}, ${playerTileY}`);
-      } else {
-        // Blocked — check for an interactable object in that direction
-        const obj = mapData.getObjectAt(nx, ny, mapData.currentFloor);
-        if (obj && obj.interactable) {
-          // Interaction prompt (full E-key system in Phase 3)
-          console.log(`Interact target: ${obj.object_id}`);
-        }
-      }
-      break; // one move per tick
-    }
-  }
-
-  // Toggle debug overlay
-  if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
-
-  input.clearFrameState();
-}
-
-// ─── Render ───────────────────────────────────────────────────────────────────
-
-function renderPlayer() {
-  renderer.clearLayer(LAYER.CHARACTERS);
-  renderer.clearLayer(LAYER.ENTITY_SHADOW);
-
-  const screen = camera.worldToScreen(playerTileX, playerTileY);
-
-  // Drop shadow
-  renderer.drawRect(LAYER.ENTITY_SHADOW, screen.x + 4, screen.y + 26, 24, 5, '#000000', 0.3);
-
-  // Player: white rectangle placeholder
-  renderer.drawRect(LAYER.CHARACTERS, screen.x + 2, screen.y + 2, 28, 28, '#f0f0f0');
-
-  // Facing indicator (small coloured dot)
-  const dotColors = { north: '#44aaff', south: '#ff6644', east: '#44ff88', west: '#ffcc22' };
-  const dotOffsets = {
-    north: { x: 12, y: 2  },
-    south: { x: 12, y: 22 },
-    east:  { x: 22, y: 12 },
-    west:  { x: 2,  y: 12 },
-  };
-  const dot = dotOffsets[playerFacing];
-  renderer.drawRect(LAYER.CHARACTERS,
-    screen.x + dot.x, screen.y + dot.y, 8, 8,
-    dotColors[playerFacing]);
-}
-
-function renderUI() {
-  renderer.clearLayer(LAYER.UI_CHROME);
-  const ctx = renderer.getLayerContext(LAYER.UI_CHROME);
-
-  // Debug tile coords (always visible, F1 toggles extended info)
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(4, 4, debugOverlay ? 200 : 140, 18);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '11px monospace';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(`Tile: ${playerTileX}, ${playerTileY}  [F1]`, 8, 7);
-
-  if (debugOverlay && mapData) {
-    const tile = mapData.getTile(playerTileX, playerTileY, mapData.currentFloor);
-    const obj  = mapData.getObjectAt(playerTileX, playerTileY, mapData.currentFloor);
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(4, 24, 240, 60);
-    ctx.fillStyle = '#ccffcc';
-    ctx.fillText(`Tile def: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 8, 27);
-    ctx.fillStyle = '#ffcccc';
-    ctx.fillText(`passable: ${mapData.isPassable(playerTileX, playerTileY, 0)}`, 8, 41);
-    ctx.fillStyle = '#ccccff';
-    ctx.fillText(`object: ${obj ? obj.object_id : 'none'}`, 8, 55);
-  }
-
-  // Map name bottom-left
-  if (mapData) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(4, 463, 200, 14);
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = '10px monospace';
-    ctx.fillText(mapData.def.display_name, 8, 464);
-  }
-}
-
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
-
 async function init() {
   mapData     = await loadMap('/data/maps/test_town.json');
   mapRenderer = new MapRenderer(renderer, camera);
 
-  camera.setMapBounds(mapData.width, mapData.height);
-  camera.snapTo(playerTileX, playerTileY);
+  // Load character definitions
+  const [aldricDef, lyriaDef] = await Promise.all([
+    fetch('/data/characters/char_fighter_aldric.json').then(r => r.json()),
+    fetch('/data/characters/char_mage_lyria.json').then(r => r.json()),
+  ]);
 
-  loop.onTick(() => {
-    handleMovement();
+  // Create characters and party
+  const aldric = new Character(aldricDef);
+  const lyria  = new Character(lyriaDef);
+
+  party = new Party();
+  GameState.party = party;
+  party.setMax(2);
+  party.addMember(aldric);
+  party.addMember(lyria);
+
+  // Movement controller (owns lead position)
+  movement = new MovementController(input, mapData, party, camera, GameState);
+  movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
+
+  camera.setMapBounds(mapData.width, mapData.height);
+  camera.snapTo(movement.leadX, movement.leadY);
+
+  loop.onTick((deltaMs) => {
+    movement.tick(deltaMs);
+    if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
+    input.clearFrameState();
   });
 
-  loop.onRender(() => {
+  loop.onRender((interpolation, deltaMs) => {
     camera.update();
-    mapRenderer.render(mapData, playerTileX, playerTileY);
-    renderPlayer();
+    mapRenderer.render(mapData, movement.leadX, movement.leadY);
+    party.render(renderer, camera, movement.leadX, movement.leadY, deltaMs);
     renderUI();
     renderer.composite();
   });
 
   loop.start();
-  console.log('Phase 2 — Map engine loaded:', mapData.def.display_name,
-    `(${mapData.width}×${mapData.height})`);
+  console.log('Phase 3 — Party loaded:', aldric.name, '+', lyria.name,
+    '| map:', mapData.def.display_name, `(${mapData.width}×${mapData.height})`);
 }
+
+// ─── Render UI ────────────────────────────────────────────────────────────────
+
+function renderUI() {
+  renderer.clearLayer(LAYER.UI_CHROME);
+  renderer.clearLayer(LAYER.DIALOGUE);
+
+  const ctx = renderer.getLayerContext(LAYER.UI_CHROME);
+  ctx.textBaseline = 'top';
+
+  // ── Tile coords — top-right ──
+  const coordText = `Tile: ${movement.leadX}, ${movement.leadY}  [F1]`;
+  const coordBoxW = debugOverlay ? 200 : 150;
+  ctx.font = '11px monospace';
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(636 - coordBoxW, 4, coordBoxW, 18);
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'right';
+  ctx.fillText(coordText, 632, 7);
+
+  // ── Debug overlay — top-right ──
+  if (debugOverlay && mapData) {
+    const x = movement.leadX, y = movement.leadY;
+    const tile = mapData.getTile(x, y, mapData.currentFloor);
+    const obj  = mapData.getObjectAt(x, y, mapData.currentFloor);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillRect(392, 24, 244, 74);
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ccffcc';
+    ctx.fillText(`Tile def: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 27);
+    ctx.fillStyle = '#ffcccc';
+    ctx.fillText(`passable: ${mapData.isPassable(x, y, 0)}`, 632, 41);
+    ctx.fillStyle = '#ccccff';
+    ctx.fillText(`object: ${obj ? obj.object_id : 'none'}`, 632, 55);
+    ctx.fillStyle = '#ffffcc';
+    ctx.fillText(`turn: ${GameState.currentTurn}`, 632, 69);
+  }
+
+  // ── Party portrait HUD — bottom-left ──
+  const members = party.active;
+  for (let i = 0; i < Math.min(members.length, 4); i++) {
+    const char = members[i];
+    const hx = 4 + i * 74;
+    const hy = 395;
+
+    // Member name (above portrait)
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = i === 0 ? '#ffffff' : '#aaaaaa';
+    ctx.fillText(char.name, hx, hy);
+
+    // Portrait box
+    ctx.fillStyle = 'rgba(20,20,20,0.85)';
+    ctx.fillRect(hx, hy + 10, 64, 64);
+    ctx.strokeStyle = i === 0 ? '#88ccff' : '#555555';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(hx, hy + 10, 64, 64);
+
+    // Sprite preview: south-facing idle frame centered in box
+    ctx.drawImage(char.getSpriteSheet(), 0, 0, 32, 32, hx + 16, hy + 18, 32, 32);
+
+    // HP bar
+    const hpPct = char.hp / char.maxHp;
+    ctx.fillStyle = '#2a1111';
+    ctx.fillRect(hx, hy + 75, 64, 5);
+    ctx.fillStyle = hpPct > 0.5 ? '#44aa44' : hpPct > 0.25 ? '#aaaa22' : '#aa2222';
+    ctx.fillRect(hx, hy + 75, Math.floor(64 * hpPct), 5);
+  }
+
+  // ── Interaction prompt — Layer 10 (DIALOGUE) ──
+  if (movement && movement.interactTarget) {
+    const tgt  = movement.interactTarget;
+    const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
+    const screen = camera.worldToScreen(tgt.tile_x, tgt.tile_y);
+    const msg  = 'Press E to interact';
+    dctx.font = '10px monospace';
+    const tw = dctx.measureText(msg).width + 12;
+    const bx = screen.x + 16 - tw / 2;
+    const by = screen.y - 20;
+    dctx.fillStyle = 'rgba(0,0,0,0.82)';
+    dctx.fillRect(bx, by, tw, 14);
+    dctx.fillStyle = '#ffff88';
+    dctx.textAlign = 'center';
+    dctx.textBaseline = 'top';
+    dctx.fillText(msg, screen.x + 16, by + 2);
+  }
+}
+
+// ─── Launch ───────────────────────────────────────────────────────────────────
 
 init().catch(err => {
   console.error('Engine init failed:', err);
