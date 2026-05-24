@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 4</title>
+  <title>CRPG Engine — Phase 5</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -28,6 +28,7 @@ import { GameState }            from './engine/gamestate.js';
 import { GameTime }             from './engine/time.js';
 import { Lighting }             from './engine/lighting.js';
 import { Weather, WEATHER_CYCLE } from './engine/weather.js';
+import { Events }               from './engine/events.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -48,9 +49,14 @@ let mapRenderer  = null;
 let party        = null;
 let movement     = null;
 let debugOverlay = false;   // F1
+let worldLogVisible = false; // L
 
 // Debug weather cycle index
 let weatherIdx = 0;
+
+// ─── Phase 5: Narration card + screen fade ────────────────────────────────────
+let narrationCard = null;  // { title, text, onDismiss, startMs }
+let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
@@ -75,8 +81,36 @@ async function init() {
   movement = new MovementController(input, mapData, party, camera, GameState);
   movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
 
+  // ── Phase 5: Event wiring ──
+  movement.setOnInteract((obj) => {
+    Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+  });
+
+  movement.setOnMove((x, y) => {
+    if (!Events.isPaused()) {
+      Events.checkLocationTriggers(GameState.currentMap, x, y);
+    }
+  });
+
   camera.setMapBounds(mapData.width, mapData.height);
   camera.snapTo(movement.leadX, movement.leadY);
+
+  // ── Phase 5: Load events ──
+  const eventsData = await fetch('/data/events/test_events.json').then(r => r.json());
+  Events.load(eventsData);
+  Events.setMapData(mapData);
+  Events.setGameTime(gameTime);
+  Events.setWeather(weather);
+
+  Events.setNarrationHandler((title, text, onDismiss) => {
+    narrationCard = { title, text, onDismiss, startMs: performance.now() };
+  });
+
+  Events.setScreenFadeHandler((direction, color, durationMs, onDone) => {
+    screenFade = { direction, color, durationMs, onDone, startMs: performance.now() };
+  });
+
+  GameState.currentMap = 'test_town';
 
   // ── Log state changes ──
   gameTime.onStateChange((newState, oldState) => {
@@ -84,12 +118,30 @@ async function init() {
   });
 
   loop.onTick((deltaMs) => {
+    // Narration card: dismiss on any keypress
+    if (narrationCard && input.wasAnyKeyPressed()) {
+      const cb = narrationCard.onDismiss;
+      narrationCard = null;
+      cb();
+      input.clearFrameState();
+      return;
+    }
+
+    // Block all other input while paused (screen_fade, etc.)
+    if (Events.isPaused()) {
+      input.clearFrameState();
+      return;
+    }
+
     const prevTurn = GameState.currentTurn;
     movement.tick(deltaMs);
-
-    // Advance game time by however many movement turns just occurred
     const movementDelta = GameState.currentTurn - prevTurn;
-    if (movementDelta > 0) gameTime.advance(movementDelta);
+
+    if (movementDelta > 0) {
+      gameTime.advance(movementDelta);
+      Events.tick(GameState.currentTurn);
+      // checkLocationTriggers is fired by setOnMove callback above
+    }
 
     // T — advance 12 turns (~2 in-world hours) without moving
     if (input.wasKeyPressed('KeyT')) {
@@ -97,7 +149,7 @@ async function init() {
       console.log(`Time skip → ${gameTime.getState()}  (${_timeString()})`);
     }
 
-    // W — cycle weather (debug; W also triggers north movement, acceptable for demo)
+    // W — cycle weather (W also triggers north movement, acceptable for demo)
     if (input.wasKeyPressed('KeyW')) {
       weatherIdx = (weatherIdx + 1) % WEATHER_CYCLE.length;
       const next = WEATHER_CYCLE[weatherIdx];
@@ -106,6 +158,7 @@ async function init() {
     }
 
     if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
+    if (input.wasKeyPressed('KeyL')) worldLogVisible = !worldLogVisible;
 
     input.clearFrameState();
   });
@@ -131,12 +184,39 @@ async function init() {
     // ── UI (Layer 9 + 10) ──
     renderUI();
 
+    // ── Screen fade (Layer 11) ──
+    renderer.clearLayer(LAYER.TRANSITION);
+    if (screenFade) {
+      const elapsed = performance.now() - screenFade.startMs;
+      const t       = Math.min(elapsed / screenFade.durationMs, 1.0);
+      const alpha   = screenFade.direction === 'out' ? t : 1 - t;
+      if (alpha > 0.001) {
+        const fctx = renderer.getLayerContext(LAYER.TRANSITION);
+        fctx.globalAlpha = alpha;
+        fctx.fillStyle   = screenFade.color;
+        fctx.fillRect(0, 0, 640, 480);
+        fctx.globalAlpha = 1;
+      }
+      if (t >= 1.0) {
+        const onDone = screenFade.onDone;
+        screenFade = null;
+        onDone();
+      }
+    }
+
     renderer.composite();
   });
 
   loop.start();
-  console.log('Phase 4 — Time, Lighting & Weather loaded.');
-  console.log('  T = advance 12 turns  |  W = cycle weather  |  F1 = debug overlay');
+
+  // Fire map-enter triggers (after all handlers are registered)
+  Events.checkMapEnter('test_town');
+
+  console.log('Phase 5 — Events & Scripting Engine loaded.');
+  console.log('  T = advance 12 turns  |  W = cycle weather  |  F1 = debug overlay  |  L = world log');
+  console.log('  Walk 10 steps to trigger timeline narration.');
+  console.log('  Walk to tile (20,15) to trigger location narration.');
+  console.log('  Stand next to chest at (16,7) and press E to trigger interaction events.');
 }
 
 // ─── Build light sources from party equipment ─────────────────────────────────
@@ -209,7 +289,7 @@ function renderUI() {
     const tile = mapData.getTile(x, y, mapData.currentFloor);
     const obj  = mapData.getObjectAt(x, y, mapData.currentFloor);
     ctx.fillStyle = 'rgba(0,0,0,0.70)';
-    ctx.fillRect(392, 42, 244, 88);
+    ctx.fillRect(392, 42, 244, 100);
     ctx.font = '10px monospace';
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ccffcc';
@@ -224,6 +304,8 @@ function renderUI() {
     ctx.fillText(`Weather: ${weather.getState()}`, 632, 97);
     ctx.fillStyle = '#ccffff';
     ctx.fillText(`Ambient: ${mapData.def.ambient_light ?? 'none'}`, 632, 110);
+    ctx.fillStyle = '#ffddaa';
+    ctx.fillText(`chest_touched: ${GameState.flags.isSet('chest_touched')}`, 632, 123);
   }
 
   // ── Party portrait HUD — bottom-left ──
@@ -261,12 +343,21 @@ function renderUI() {
     }
   }
 
-  // ── Interaction prompt ──
-  if (movement && movement.interactTarget) {
-    const tgt  = movement.interactTarget;
-    const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
+  // ── World log panel (L key) ──
+  if (worldLogVisible) _renderWorldLog(ctx);
+
+  // ── Dialogue layer: narration card or interaction prompt ──
+  if (narrationCard) {
+    _renderNarrationCard(
+      renderer.getLayerContext(LAYER.DIALOGUE),
+      narrationCard,
+      performance.now() - narrationCard.startMs
+    );
+  } else if (movement && movement.interactTarget) {
+    const tgt    = movement.interactTarget;
+    const dctx   = renderer.getLayerContext(LAYER.DIALOGUE);
     const screen = camera.worldToScreen(tgt.tile_x, tgt.tile_y);
-    const msg  = 'Press E to interact';
+    const msg    = 'Press E to interact';
     dctx.font = '10px monospace';
     const tw = dctx.measureText(msg).width + 12;
     const bx = screen.x + 16 - tw / 2;
@@ -278,6 +369,130 @@ function renderUI() {
     dctx.textBaseline = 'top';
     dctx.fillText(msg, screen.x + 16, by + 2);
   }
+}
+
+// ─── Narration card ────────────────────────────────────────────────────────────
+
+function _renderNarrationCard(ctx, card, elapsed) {
+  const alpha       = Math.min(elapsed / 300, 1.0);
+  const slideOffset = Math.round((1 - alpha) * 30);
+
+  const CW = 400, CH = 170;
+  const cx = Math.round((640 - CW) / 2);
+  const cy = Math.round((480 - CH) / 2) + slideOffset;
+
+  ctx.save();
+
+  // Dim background
+  ctx.globalAlpha = 0.72 * alpha;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, 640, 480);
+
+  // Card body
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = 'rgba(14,18,28,0.97)';
+  ctx.fillRect(cx, cy, CW, CH);
+  ctx.strokeStyle = '#556677';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx, cy, CW, CH);
+
+  // Inner top border accent
+  ctx.strokeStyle = '#33aacc';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx + 8, cy + 1);
+  ctx.lineTo(cx + CW - 8, cy + 1);
+  ctx.stroke();
+
+  ctx.textBaseline = 'top';
+  let textY = cy + 20;
+
+  if (card.title) {
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffee88';
+    ctx.fillText(card.title, cx + CW / 2, textY);
+    textY += 22;
+    // Separator
+    ctx.strokeStyle = '#334455';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + 20, textY - 4);
+    ctx.lineTo(cx + CW - 20, textY - 4);
+    ctx.stroke();
+  }
+
+  // Body text with word wrap
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#dde8ee';
+  const lines = _wrapText(ctx, card.text, CW - 48);
+  for (const line of lines) {
+    ctx.fillText(line, cx + 24, textY);
+    textY += 16;
+  }
+
+  // "Press any key" prompt
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = `rgba(102,136,153,${alpha})`;
+  ctx.fillText('— Press any key to continue —', cx + CW / 2, cy + CH - 16);
+
+  ctx.restore();
+}
+
+function _wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line    = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// ─── World log panel ──────────────────────────────────────────────────────────
+
+function _renderWorldLog(ctx) {
+  const entries = GameState.worldLog.slice(-20);
+  const PW = 310, ROW = 13;
+  const PH = Math.max(entries.length, 1) * ROW + 24;
+  const px = 4, py = 4;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  ctx.fillRect(px, py, PW, PH);
+  ctx.strokeStyle = '#334455';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px, py, PW, PH);
+
+  ctx.font = 'bold 9px monospace';
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#33aacc';
+  ctx.fillText('WORLD LOG  [L] close', px + 6, py + 5);
+
+  if (entries.length === 0) {
+    ctx.fillStyle = '#556677';
+    ctx.fillText('(empty)', px + 6, py + 18);
+  } else {
+    ctx.font = '9px monospace';
+    entries.forEach((entry, i) => {
+      const ey = py + 18 + i * ROW;
+      ctx.fillStyle = '#446688';
+      ctx.fillText(`T${entry.turn}`, px + 6, ey);
+      ctx.fillStyle = '#aabbcc';
+      ctx.fillText(entry.text, px + 42, ey);
+    });
+  }
+  ctx.restore();
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

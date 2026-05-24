@@ -1,0 +1,88 @@
+[
+  {
+    "event_id": "evt_ten_turns",
+    "event_label": "Ten Turns Passed",
+    "trigger": {
+      "type": "timeline",
+      "reference": "game_start",
+      "after_event": null,
+      "delay_turns": 10
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "The sun has moved. Ten turns have passed."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_crossroads",
+    "event_label": "The Crossroads",
+    "trigger": {
+      "type": "location_tile",
+      "map_id": "test_town",
+      "tile_x": 20,
+      "tile_y": 15,
+      "trigger_radius": 0
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "You stand at the crossroads."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_chest_interact",
+    "event_label": "Chest Interaction",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_locked_chest_01"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "set_flag",
+        "flag_id": "chest_touched"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "Someone touched the chest."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": "evt_chest_rattles",
+    "priority": 0
+  },
+  {
+    "event_id": "evt_chest_rattles",
+    "event_label": "The Chest Rattles",
+    "trigger": { "type": "none" },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "The chest rattles."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  }
+]

@@ -114,6 +114,16 @@ export class MapData {
   // ── Object mutation ───────────────────────────────────────────────────────
 
   /**
+   * Write a new tile ID at (x, y, floor).
+   * No-op if coordinates are out of bounds.
+   */
+  setTile(x, y, floor, tileId) {
+    if (x < 0 || x >= this._def.width || y < 0 || y >= this._def.height) return;
+    const floorOffset = floor * this._def.width * this._def.height;
+    this._def.tiles[floorOffset + y * this._def.width + x] = tileId;
+  }
+
+  /**
    * Change an object's state (e.g. open a door).
    * Setting state to 'open' marks the object passable.
    */

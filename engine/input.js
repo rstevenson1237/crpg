@@ -93,6 +93,11 @@ export class Input {
     return this._keyPressed.has(code);
   }
 
+  /** Returns true if any key was pressed this frame. */
+  wasAnyKeyPressed() {
+    return this._keyPressed.size > 0;
+  }
+
   /** @returns {{ tileX: number, tileY: number }} */
   getMouseTile() {
     return { tileX: this._mouseTileX, tileY: this._mouseTileY };

@@ -37,7 +37,15 @@ export class MovementController {
     this._leadY     = 0;
     this._cooldown  = 0;
     this._interactTarget = null;
+    this._onInteract = null;
+    this._onMove     = null;
   }
+
+  /** @param {(obj: object) => void} cb */
+  setOnInteract(cb) { this._onInteract = cb; }
+
+  /** @param {(x: number, y: number) => void} cb */
+  setOnMove(cb)     { this._onMove = cb; }
 
   setLeadPosition(x, y) { this._leadX = x; this._leadY = y; }
 
@@ -58,6 +66,7 @@ export class MovementController {
     // E-key interaction (uses wasKeyPressed — single-press only)
     if (this._input.wasKeyPressed('KeyE') && this._interactTarget) {
       console.log(`Interact: ${this._interactTarget.object_id}`);
+      if (this._onInteract) this._onInteract(this._interactTarget);
     }
 
     // Find the first held movement key
@@ -93,6 +102,7 @@ export class MovementController {
       this._gameState.currentTurn++;
       this._interactTarget = null;
       console.log(`Turn: ${this._gameState.currentTurn}  Tile: ${nx}, ${ny}`);
+      if (this._onMove) this._onMove(nx, ny);
     } else {
       const obj = this._mapData.getObjectAt(nx, ny, this._mapData.currentFloor);
       this._interactTarget = (obj && obj.interactable) ? obj : null;
