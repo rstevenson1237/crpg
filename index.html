@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRPG Engine — Phase 1</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<script type="module">
+import { Renderer, LAYER } from './engine/renderer.js';
+import { Camera } from './engine/camera.js';
+import { Input } from './engine/input.js';
+import { GameLoop } from './engine/gameloop.js';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+const TILE_SIZE   = 32;
+const MAP_COLS    = 40;   // tiles wide
+const MAP_ROWS    = 30;   // tiles tall
+const TILE_GREEN  = '#3a6e2a';
+const TILE_DARK   = '#2d5520';
+const GRID_LINE   = 'rgba(0,0,0,0.15)';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let playerTileX = Math.floor(MAP_COLS / 2);
+let playerTileY = Math.floor(MAP_ROWS / 2);
+
+// Move cooldown: only allow one tile move per keypress (not hold)
+const MOVE_KEYS = {
+  KeyW:      { dx:  0, dy: -1 },
+  ArrowUp:   { dx:  0, dy: -1 },
+  KeyS:      { dx:  0, dy:  1 },
+  ArrowDown: { dx:  0, dy:  1 },
+  KeyA:      { dx: -1, dy:  0 },
+  ArrowLeft: { dx: -1, dy:  0 },
+  KeyD:      { dx:  1, dy:  0 },
+  ArrowRight:{ dx:  1, dy:  0 },
+};
+
+// ─── Engine Setup ─────────────────────────────────────────────────────────────
+const renderer = new Renderer();
+const camera   = new Camera();
+const loop     = new GameLoop(100);
+const input    = new Input(
+  renderer.canvas,
+  camera,
+  () => renderer.scale
+);
+
+camera.setMapBounds(MAP_COLS, MAP_ROWS);
+camera.snapTo(playerTileX, playerTileY);
+
+// ─── Procedural Background Tile ───────────────────────────────────────────────
+// Generate a simple 64×32 grass tile strip (2 variants) via Canvas.
+function makeGrassTile() {
+  const c = new OffscreenCanvas(64, 32);
+  const ctx = c.getContext('2d');
+
+  // Variant 0: base green
+  ctx.fillStyle = TILE_GREEN;
+  ctx.fillRect(0, 0, 32, 32);
+  // tiny dither marks
+  ctx.fillStyle = TILE_DARK;
+  ctx.fillRect(4, 6, 2, 2);
+  ctx.fillRect(14, 20, 2, 2);
+  ctx.fillRect(22, 10, 2, 2);
+
+  // Variant 1: slightly darker
+  ctx.fillStyle = TILE_DARK;
+  ctx.fillRect(32, 0, 32, 32);
+  ctx.fillStyle = TILE_GREEN;
+  ctx.fillRect(38, 8, 2, 2);
+  ctx.fillRect(50, 18, 2, 2);
+  ctx.fillRect(44, 26, 2, 2);
+
+  return c;
+}
+
+const grassTile = makeGrassTile();
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+
+function renderTerrain() {
+  renderer.clearLayer(LAYER.TERRAIN_BASE);
+  const rect = camera.getWorldRect();
+
+  const startCol = Math.max(0, Math.floor(rect.x / TILE_SIZE));
+  const startRow = Math.max(0, Math.floor(rect.y / TILE_SIZE));
+  const endCol   = Math.min(MAP_COLS - 1, Math.ceil((rect.x + rect.w) / TILE_SIZE));
+  const endRow   = Math.min(MAP_ROWS - 1, Math.ceil((rect.y + rect.h) / TILE_SIZE));
+
+  const ctx = renderer.getLayerContext(LAYER.TERRAIN_BASE);
+
+  for (let row = startRow; row <= endRow; row++) {
+    for (let col = startCol; col <= endCol; col++) {
+      const screen = camera.worldToScreen(col, row);
+      // Checkerboard variant for visual variety
+      const variant = (col + row) % 2 === 0 ? 0 : 1;
+      ctx.drawImage(grassTile, variant * 32, 0, 32, 32, screen.x, screen.y, 32, 32);
+    }
+  }
+
+  // Grid overlay (subtle)
+  ctx.strokeStyle = GRID_LINE;
+  ctx.lineWidth = 1;
+  for (let row = startRow; row <= endRow + 1; row++) {
+    const s = camera.worldToScreen(startCol, row);
+    const e = camera.worldToScreen(endCol + 1, row);
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(e.x, e.y);
+    ctx.stroke();
+  }
+  for (let col = startCol; col <= endCol + 1; col++) {
+    const s = camera.worldToScreen(col, startRow);
+    const e = camera.worldToScreen(col, endRow + 1);
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(e.x, e.y);
+    ctx.stroke();
+  }
+}
+
+function renderPlayer() {
+  renderer.clearLayer(LAYER.CHARACTERS);
+  const screen = camera.worldToScreen(playerTileX, playerTileY);
+  // White 32×32 placeholder rectangle for the player
+  renderer.drawRect(LAYER.CHARACTERS, screen.x, screen.y, 32, 32, '#ffffff');
+  // Subtle player shadow on entity shadow layer
+  renderer.clearLayer(LAYER.ENTITY_SHADOW);
+  renderer.drawRect(LAYER.ENTITY_SHADOW, screen.x + 4, screen.y + 28, 24, 4, '#000000', 0.3);
+}
+
+function renderUI() {
+  renderer.clearLayer(LAYER.UI_CHROME);
+  const ctx = renderer.getLayerContext(LAYER.UI_CHROME);
+  ctx.fillStyle = '#fff';
+  ctx.font = '10px monospace';
+  ctx.fillText(`Tile: ${playerTileX}, ${playerTileY}`, 8, 14);
+}
+
+// ─── Input / Movement ─────────────────────────────────────────────────────────
+
+function handleMovement() {
+  for (const [code, delta] of Object.entries(MOVE_KEYS)) {
+    if (input.wasKeyPressed(code)) {
+      const nx = playerTileX + delta.dx;
+      const ny = playerTileY + delta.dy;
+      // Clamp to map bounds
+      if (nx >= 0 && nx < MAP_COLS && ny >= 0 && ny < MAP_ROWS) {
+        playerTileX = nx;
+        playerTileY = ny;
+        camera.setTarget(playerTileX, playerTileY);
+        console.log(`Player tile: ${playerTileX}, ${playerTileY}`);
+      }
+    }
+  }
+  input.clearFrameState();
+}
+
+// ─── Game Loop ────────────────────────────────────────────────────────────────
+
+loop.onTick(() => {
+  handleMovement();
+});
+
+loop.onRender(() => {
+  camera.update();
+  renderTerrain();
+  renderPlayer();
+  renderUI();
+  renderer.composite();
+});
+
+loop.start();
+</script>
+</body>
+</html>
