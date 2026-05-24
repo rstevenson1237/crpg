@@ -84,5 +84,25 @@
     "repeat": false,
     "on_complete_fire_event": null,
     "priority": 0
+  },
+  {
+    "event_id": "evt_elder_revelation",
+    "event_label": "Elder Reveals Fortress Location",
+    "trigger": { "type": "none" },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "grant_secret",
+        "secret_id": "secret_fortress_location"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The elder revealed the fortress location."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
   }
 ]

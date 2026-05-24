@@ -15,6 +15,9 @@ import { GameState } from './gamestate.js';
 
 let _narrationHandler  = null;  // (title, text, onDismiss) => void
 let _screenFadeHandler = null;  // (direction, color, durationMs, onDone) => void
+let _dialogueHandler   = null;  // (npcId, rootNodeId, onClose) => void
+let _npcSpawnHandler   = null;  // (npcId, mapId, x, y) => void
+let _npcDespawnHandler = null;  // (npcId) => void
 let _mapDataRef  = null;
 let _gameTimeRef = null;
 let _weatherRef  = null;
@@ -37,6 +40,11 @@ export const Events = {
 
   setNarrationHandler(fn)  { _narrationHandler  = fn; },
   setScreenFadeHandler(fn) { _screenFadeHandler = fn; },
+  setDialogueHandler(fn)   { _dialogueHandler   = fn; },
+  setNPCHandlers(spawnFn, despawnFn) {
+    _npcSpawnHandler   = spawnFn;
+    _npcDespawnHandler = despawnFn;
+  },
   setMapData(md)   { _mapDataRef  = md; },
   setGameTime(gt)  { _gameTimeRef = gt; },
   setWeather(w)    { _weatherRef  = w; },
@@ -44,6 +52,19 @@ export const Events = {
   isPaused()       { return _paused; },
   isComplete(id)   { return _completed.has(id); },
   getCompleted()   { return _completed; },
+
+  /**
+   * Directly fire a named event by ID (used by dialogue on_select_fire_event, etc.).
+   * Respects conditions, repeat, and pause state.
+   * @param {string} eventId
+   */
+  fireEvent(eventId) {
+    const ev = _events.get(eventId);
+    if (!ev) { console.warn(`[Events] fireEvent: unknown event "${eventId}"`); return; }
+    if (!ev.repeat && _completed.has(eventId)) return;
+    if (_paused) { _pending.push({ ev, currentTurn: GameState.currentTurn }); return; }
+    if (_evalConditions(ev)) _fireEvent(ev, GameState.currentTurn);
+  },
 
   // ── Triggers called by the game loop ─────────────────────────────────────
 
@@ -343,12 +364,33 @@ function _executeAction(action, next) {
       }
       return;
 
-    // ── Stubs for future phases ────────────────────────────────────────────
+    // ── Dialogue (pausing action — calls next() via callback) ─────────────
     case 'show_dialogue':
-      console.log(`[Events] show_dialogue stub: npc=${action.npc_id} root=${action.dialogue_root_id}`);
+      _paused = true;
+      if (_dialogueHandler) {
+        _dialogueHandler(action.npc_id, action.dialogue_root_id, () => {
+          _paused = false;
+          _drainPending();
+          next();
+        });
+      } else {
+        console.log(`[Events] show_dialogue stub: npc=${action.npc_id} root=${action.dialogue_root_id}`);
+        _paused = false;
+        next();
+      }
+      return;
+
+    // ── NPC management ─────────────────────────────────────────────────────
+    case 'spawn_npc':
+      if (_npcSpawnHandler) _npcSpawnHandler(action.npc_id, action.map_id, action.tile_x, action.tile_y);
+      else console.log(`[Events] spawn_npc stub: ${action.npc_id}`);
       next(); break;
 
-    case 'spawn_npc': case 'despawn_npc':
+    case 'despawn_npc':
+      if (_npcDespawnHandler) _npcDespawnHandler(action.npc_id);
+      else console.log(`[Events] despawn_npc stub: ${action.npc_id}`);
+      next(); break;
+
     case 'add_party_member': case 'remove_party_member':
     case 'lock_party_member': case 'unlock_party_member':
     case 'grant_item': case 'remove_item':

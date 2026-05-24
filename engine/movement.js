@@ -36,22 +36,32 @@ export class MovementController {
     this._leadX     = 0;
     this._leadY     = 0;
     this._cooldown  = 0;
-    this._interactTarget = null;
-    this._onInteract = null;
-    this._onMove     = null;
+    this._interactTarget    = null;  // map object
+    this._npcInteractTarget = null;  // NPC instance
+    this._onInteract    = null;
+    this._onNPCInteract = null;
+    this._onMove        = null;
+    this._npcLookup     = null;      // (x, y) => NPC|null
   }
 
   /** @param {(obj: object) => void} cb */
-  setOnInteract(cb) { this._onInteract = cb; }
+  setOnInteract(cb)    { this._onInteract    = cb; }
+
+  /** @param {(npc: object) => void} cb — fired when E is pressed facing an NPC */
+  setOnNPCInteract(cb) { this._onNPCInteract = cb; }
 
   /** @param {(x: number, y: number) => void} cb */
-  setOnMove(cb)     { this._onMove = cb; }
+  setOnMove(cb)        { this._onMove = cb; }
+
+  /** @param {(x: number, y: number) => (NPC|null)} fn */
+  setNPCLookup(fn)     { this._npcLookup = fn; }
 
   setLeadPosition(x, y) { this._leadX = x; this._leadY = y; }
 
-  get leadX()          { return this._leadX; }
-  get leadY()          { return this._leadY; }
-  get interactTarget() { return this._interactTarget; }
+  get leadX()             { return this._leadX; }
+  get leadY()             { return this._leadY; }
+  get interactTarget()    { return this._interactTarget; }
+  get npcInteractTarget() { return this._npcInteractTarget; }
 
   /**
    * Process one logic tick.
@@ -63,10 +73,14 @@ export class MovementController {
     const lead = this._party.getLead();
     if (!lead) return;
 
-    // E-key interaction (uses wasKeyPressed — single-press only)
-    if (this._input.wasKeyPressed('KeyE') && this._interactTarget) {
-      console.log(`Interact: ${this._interactTarget.object_id}`);
-      if (this._onInteract) this._onInteract(this._interactTarget);
+    // E-key interaction — NPC takes priority over map objects
+    if (this._input.wasKeyPressed('KeyE')) {
+      if (this._npcInteractTarget && this._onNPCInteract) {
+        this._onNPCInteract(this._npcInteractTarget);
+      } else if (this._interactTarget && this._onInteract) {
+        console.log(`Interact: ${this._interactTarget.object_id}`);
+        this._onInteract(this._interactTarget);
+      }
     }
 
     // Find the first held movement key
@@ -90,7 +104,10 @@ export class MovementController {
     const nx = this._leadX + heldMove.dx;
     const ny = this._leadY + heldMove.dy;
 
-    if (this._mapData.isPassable(nx, ny, this._mapData.currentFloor)) {
+    const npcAtDest = this._npcLookup ? this._npcLookup(nx, ny) : null;
+    const tilePassable = this._mapData.isPassable(nx, ny, this._mapData.currentFloor);
+
+    if (tilePassable && !npcAtDest) {
       this._party.recordLeadMove(this._leadX, this._leadY);
       this._leadX = nx;
       this._leadY = ny;
@@ -100,12 +117,20 @@ export class MovementController {
       }
       this._camera.setTarget(nx, ny);
       this._gameState.currentTurn++;
-      this._interactTarget = null;
+      this._interactTarget    = null;
+      this._npcInteractTarget = null;
       console.log(`Turn: ${this._gameState.currentTurn}  Tile: ${nx}, ${ny}`);
       if (this._onMove) this._onMove(nx, ny);
     } else {
-      const obj = this._mapData.getObjectAt(nx, ny, this._mapData.currentFloor);
-      this._interactTarget = (obj && obj.interactable) ? obj : null;
+      // Blocked — determine interact target type
+      if (npcAtDest) {
+        this._npcInteractTarget = npcAtDest;
+        this._interactTarget    = null;
+      } else {
+        this._npcInteractTarget = null;
+        const obj = this._mapData.getObjectAt(nx, ny, this._mapData.currentFloor);
+        this._interactTarget = (obj && obj.interactable) ? obj : null;
+      }
       for (const char of this._party.active) char.setAnimState('idle');
     }
   }

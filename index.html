@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 5</title>
+  <title>CRPG Engine — Phase 6</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -29,6 +29,8 @@ import { GameTime }             from './engine/time.js';
 import { Lighting }             from './engine/lighting.js';
 import { Weather, WEATHER_CYCLE } from './engine/weather.js';
 import { Events }               from './engine/events.js';
+import { NPCs }                 from './engine/npc.js';
+import { Dialogue }             from './engine/dialogue.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -58,6 +60,9 @@ let weatherIdx = 0;
 let narrationCard = null;  // { title, text, onDismiss, startMs }
 let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
 
+// ─── Phase 6: Dialogue ────────────────────────────────────────────────────────
+// Dialogue is managed by the Dialogue module. isOpen() checked in the tick loop.
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
   mapData     = await loadMap('/data/maps/test_town.json');
@@ -80,6 +85,40 @@ async function init() {
 
   movement = new MovementController(input, mapData, party, camera, GameState);
   movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
+
+  // ── Phase 6: NPC system init ──
+  Dialogue.init(renderer, input);
+
+  const npcsData = await fetch('/data/npcs/test_npcs.json').then(r => r.json());
+  NPCs.load(npcsData);
+  NPCs.spawnForMap('test_town');
+
+  // Let movement controller check NPC tiles for blocking
+  movement.setNPCLookup((x, y) => NPCs.getAtTile(GameState.currentMap, x, y));
+
+  // E-key on NPC → open dialogue
+  movement.setOnNPCInteract((npc) => {
+    if (!Dialogue.isOpen()) {
+      Dialogue.open(npc.def.npc_id, npc.dialogueRoot);
+    }
+  });
+
+  // Wire Events.show_dialogue action to Dialogue module
+  Events.setDialogueHandler((npcId, rootNodeId, onClose) => {
+    Dialogue.open(npcId, rootNodeId).then(() => {
+      // Dialogue.close() fires its own npc_dialogue_completed trigger;
+      // onClose() resumes the event queue. Wire it via a polling check or
+      // store and call on next Dialogue.close().
+      // Simplest: resolve immediately and let the action complete.
+      onClose();
+    });
+  });
+
+  // Wire spawn/despawn NPC actions
+  Events.setNPCHandlers(
+    (npcId, mapId, x, y) => NPCs.spawn(npcId, mapId, x, y),
+    (npcId) => NPCs.despawn(npcId)
+  );
 
   // ── Phase 5: Event wiring ──
   movement.setOnInteract((obj) => {
@@ -127,10 +166,22 @@ async function init() {
       return;
     }
 
-    // Block all other input while paused (screen_fade, etc.)
+    // Block all other input while event engine is paused (screen_fade, etc.)
     if (Events.isPaused()) {
       input.clearFrameState();
       return;
+    }
+
+    // ── Phase 6: Dialogue input handling ──
+    if (Dialogue.isOpen()) {
+      if (input.wasKeyPressed('Space'))   Dialogue.handleKey('Space');
+      if (input.wasKeyPressed('Escape'))  Dialogue.handleKey('Escape');
+      if (input.wasKeyPressed('Digit1'))  Dialogue.handleKey('Digit1');
+      if (input.wasKeyPressed('Digit2'))  Dialogue.handleKey('Digit2');
+      if (input.wasKeyPressed('Digit3'))  Dialogue.handleKey('Digit3');
+      if (input.wasKeyPressed('Digit4'))  Dialogue.handleKey('Digit4');
+      input.clearFrameState();
+      return;  // block movement while dialogue is open
     }
 
     const prevTurn = GameState.currentTurn;
@@ -140,12 +191,19 @@ async function init() {
     if (movementDelta > 0) {
       gameTime.advance(movementDelta);
       Events.tick(GameState.currentTurn);
+      // ── Phase 6: Update NPC schedules and facing ──
+      NPCs.update(gameTime);
+      NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
       // checkLocationTriggers is fired by setOnMove callback above
+    } else {
+      // Update facing even when stationary (player turns in place)
+      NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
     }
 
     // T — advance 12 turns (~2 in-world hours) without moving
     if (input.wasKeyPressed('KeyT')) {
       gameTime.advance(12);
+      NPCs.update(gameTime);
       console.log(`Time skip → ${gameTime.getState()}  (${_timeString()})`);
     }
 
@@ -169,8 +227,11 @@ async function init() {
     // Render map layers 0–5
     mapRenderer.render(mapData, movement.leadX, movement.leadY);
 
-    // Render party (layer 4)
+    // Render party (layer 4) — clears CHARACTERS + ENTITY_SHADOW, draws party
     party.render(renderer, camera, movement.leadX, movement.leadY, deltaMs);
+
+    // Render NPCs (layer 4) — draws on top of party layer (Y-sorted among themselves)
+    NPCs.render(renderer, camera, GameState.currentMap, deltaMs);
 
     // ── Weather (Layer 6) ──
     const leadScreen = camera.worldToScreen(movement.leadX, movement.leadY);
@@ -182,7 +243,7 @@ async function init() {
     lighting.render(deltaMs, lightSources);
 
     // ── UI (Layer 9 + 10) ──
-    renderUI();
+    renderUI(deltaMs);
 
     // ── Screen fade (Layer 11) ──
     renderer.clearLayer(LAYER.TRANSITION);
@@ -212,11 +273,11 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 5 — Events & Scripting Engine loaded.');
+  console.log('Phase 6 — NPC System, Schedules & Dialogue loaded.');
   console.log('  T = advance 12 turns  |  W = cycle weather  |  F1 = debug overlay  |  L = world log');
-  console.log('  Walk 10 steps to trigger timeline narration.');
-  console.log('  Walk to tile (20,15) to trigger location narration.');
-  console.log('  Stand next to chest at (16,7) and press E to trigger interaction events.');
+  console.log('  Walk to Elder Maris at tile (15,10) and press E to talk.');
+  console.log('  In console: GameState.addSecret("secret_warden_letter") to unlock secret dialogue option.');
+  console.log('  NPCs.despawn("npc_town_elder") removes elder from map.');
 }
 
 // ─── Build light sources from party equipment ─────────────────────────────────
@@ -251,7 +312,7 @@ function _lightRadius(char) {
 
 // ─── Render UI ────────────────────────────────────────────────────────────────
 
-function renderUI() {
+function renderUI(deltaMs = 0) {
   renderer.clearLayer(LAYER.UI_CHROME);
   renderer.clearLayer(LAYER.DIALOGUE);
 
@@ -346,28 +407,38 @@ function renderUI() {
   // ── World log panel (L key) ──
   if (worldLogVisible) _renderWorldLog(ctx);
 
-  // ── Dialogue layer: narration card or interaction prompt ──
+  // ── Dialogue layer: narration card, dialogue box, or interaction prompt ──
   if (narrationCard) {
     _renderNarrationCard(
       renderer.getLayerContext(LAYER.DIALOGUE),
       narrationCard,
       performance.now() - narrationCard.startMs
     );
-  } else if (movement && movement.interactTarget) {
-    const tgt    = movement.interactTarget;
-    const dctx   = renderer.getLayerContext(LAYER.DIALOGUE);
-    const screen = camera.worldToScreen(tgt.tile_x, tgt.tile_y);
-    const msg    = 'Press E to interact';
-    dctx.font = '10px monospace';
-    const tw = dctx.measureText(msg).width + 12;
-    const bx = screen.x + 16 - tw / 2;
-    const by = screen.y - 20;
-    dctx.fillStyle = 'rgba(0,0,0,0.82)';
-    dctx.fillRect(bx, by, tw, 14);
-    dctx.fillStyle = '#ffff88';
-    dctx.textAlign = 'center';
-    dctx.textBaseline = 'top';
-    dctx.fillText(msg, screen.x + 16, by + 2);
+  } else if (Dialogue.isOpen()) {
+    Dialogue.update(deltaMs);
+    Dialogue.render();
+  } else {
+    // Interaction / talk prompt for the facing target
+    const npcTgt = movement?.npcInteractTarget ?? null;
+    const objTgt = movement?.interactTarget ?? null;
+    const tgt    = npcTgt || objTgt;
+    if (tgt) {
+      const dctx   = renderer.getLayerContext(LAYER.DIALOGUE);
+      const screen = npcTgt
+        ? camera.worldToScreen(npcTgt.tileX, npcTgt.tileY)
+        : camera.worldToScreen(objTgt.tile_x, objTgt.tile_y);
+      const msg = npcTgt ? 'Press E to talk' : 'Press E to interact';
+      dctx.font = '10px monospace';
+      const tw = dctx.measureText(msg).width + 12;
+      const bx = screen.x + 16 - tw / 2;
+      const by = screen.y - 20;
+      dctx.fillStyle   = 'rgba(0,0,0,0.82)';
+      dctx.fillRect(bx, by, tw, 14);
+      dctx.fillStyle   = npcTgt ? '#88ffcc' : '#ffff88';
+      dctx.textAlign   = 'center';
+      dctx.textBaseline = 'top';
+      dctx.fillText(msg, screen.x + 16, by + 2);
+    }
   }
 }
 

@@ -1,0 +1,26 @@
+[
+  {
+    "npc_id": "npc_town_elder",
+    "display_name": "Elder Maris",
+    "class_id": null,
+    "sprite_sheet": null,
+    "portrait": null,
+    "faction_id": null,
+    "dialogue_root": "dlg_elder_root",
+    "map_id": "test_town",
+    "tile_x": 15,
+    "tile_y": 10,
+    "floor": 0,
+    "facing": "south",
+    "schedule": [
+      {
+        "time_start": "evening",
+        "time_end": "midnight",
+        "position": { "tile_x": 18, "tile_y": 12 },
+        "dialogue_root_override": null,
+        "available": true
+      }
+    ],
+    "tags": ["quest_giver", "elder"]
+  }
+]
