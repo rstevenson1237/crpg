@@ -16,7 +16,7 @@
   "abilities_unlocked": [],
   "equipment": {
     "weapon": null,
-    "off_hand": null,
+    "off_hand": "item_torch",
     "armor": null,
     "helm": null,
     "accessory_1": null,

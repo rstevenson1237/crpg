@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 3</title>
+  <title>CRPG Engine — Phase 4</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -16,15 +16,18 @@
 </head>
 <body>
 <script type="module">
-import { Renderer, LAYER } from './engine/renderer.js';
-import { Camera } from './engine/camera.js';
-import { Input } from './engine/input.js';
-import { GameLoop } from './engine/gameloop.js';
+import { Renderer, LAYER }      from './engine/renderer.js';
+import { Camera }               from './engine/camera.js';
+import { Input }                from './engine/input.js';
+import { GameLoop }             from './engine/gameloop.js';
 import { loadMap, MapRenderer } from './engine/map.js';
-import { Character } from './engine/character.js';
-import { Party } from './engine/party.js';
-import { MovementController } from './engine/movement.js';
-import { GameState } from './engine/gamestate.js';
+import { Character }            from './engine/character.js';
+import { Party }                from './engine/party.js';
+import { MovementController }   from './engine/movement.js';
+import { GameState }            from './engine/gamestate.js';
+import { GameTime }             from './engine/time.js';
+import { Lighting }             from './engine/lighting.js';
+import { Weather, WEATHER_CYCLE } from './engine/weather.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -32,25 +35,34 @@ const camera   = new Camera();
 const loop     = new GameLoop(100);
 const input    = new Input(renderer.canvas, camera, () => renderer.scale);
 
+// ─── Phase 4: Time, Lighting, Weather ────────────────────────────────────────
+const gameTime = new GameTime();
+const lighting = new Lighting(renderer, gameTime);
+const weather  = new Weather(renderer);
+
+GameState.gameTime = gameTime;
+
 // ─── Game State ───────────────────────────────────────────────────────────────
 let mapData      = null;
 let mapRenderer  = null;
 let party        = null;
 let movement     = null;
-let debugOverlay = false;   // toggled by F1
+let debugOverlay = false;   // F1
+
+// Debug weather cycle index
+let weatherIdx = 0;
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
   mapData     = await loadMap('/data/maps/test_town.json');
   mapRenderer = new MapRenderer(renderer, camera);
+  lighting.setMapData(mapData);
 
-  // Load character definitions
   const [aldricDef, lyriaDef] = await Promise.all([
     fetch('/data/characters/char_fighter_aldric.json').then(r => r.json()),
     fetch('/data/characters/char_mage_lyria.json').then(r => r.json()),
   ]);
 
-  // Create characters and party
   const aldric = new Character(aldricDef);
   const lyria  = new Character(lyriaDef);
 
@@ -60,30 +72,101 @@ async function init() {
   party.addMember(aldric);
   party.addMember(lyria);
 
-  // Movement controller (owns lead position)
   movement = new MovementController(input, mapData, party, camera, GameState);
   movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
 
   camera.setMapBounds(mapData.width, mapData.height);
   camera.snapTo(movement.leadX, movement.leadY);
 
+  // ── Log state changes ──
+  gameTime.onStateChange((newState, oldState) => {
+    console.log(`Time → ${newState}  (${_timeString()}  Day ${gameTime.dayNumber})`);
+  });
+
   loop.onTick((deltaMs) => {
+    const prevTurn = GameState.currentTurn;
     movement.tick(deltaMs);
+
+    // Advance game time by however many movement turns just occurred
+    const movementDelta = GameState.currentTurn - prevTurn;
+    if (movementDelta > 0) gameTime.advance(movementDelta);
+
+    // T — advance 12 turns (~2 in-world hours) without moving
+    if (input.wasKeyPressed('KeyT')) {
+      gameTime.advance(12);
+      console.log(`Time skip → ${gameTime.getState()}  (${_timeString()})`);
+    }
+
+    // W — cycle weather (debug; W also triggers north movement, acceptable for demo)
+    if (input.wasKeyPressed('KeyW')) {
+      weatherIdx = (weatherIdx + 1) % WEATHER_CYCLE.length;
+      const next = WEATHER_CYCLE[weatherIdx];
+      weather.setState(next);
+      console.log(`Weather → ${next}`);
+    }
+
     if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
+
     input.clearFrameState();
   });
 
   loop.onRender((interpolation, deltaMs) => {
     camera.update();
+
+    // Render map layers 0–5
     mapRenderer.render(mapData, movement.leadX, movement.leadY);
+
+    // Render party (layer 4)
     party.render(renderer, camera, movement.leadX, movement.leadY, deltaMs);
+
+    // ── Weather (Layer 6) ──
+    const leadScreen = camera.worldToScreen(movement.leadX, movement.leadY);
+    weather.setPlayerScreenPos(leadScreen.x + 16, leadScreen.y + 16);
+    weather.update(deltaMs);
+
+    // ── Lighting (Layer 7) ──
+    const lightSources = _buildLightSources();
+    lighting.render(deltaMs, lightSources);
+
+    // ── UI (Layer 9 + 10) ──
     renderUI();
+
     renderer.composite();
   });
 
   loop.start();
-  console.log('Phase 3 — Party loaded:', aldric.name, '+', lyria.name,
-    '| map:', mapData.def.display_name, `(${mapData.width}×${mapData.height})`);
+  console.log('Phase 4 — Time, Lighting & Weather loaded.');
+  console.log('  T = advance 12 turns  |  W = cycle weather  |  F1 = debug overlay');
+}
+
+// ─── Build light sources from party equipment ─────────────────────────────────
+
+const LIGHT_RADII = { torch: 4 * 32, lantern: 6 * 32 };
+
+function _buildLightSources() {
+  const sources = [];
+  if (!party) return sources;
+  for (let i = 0; i < party.active.length; i++) {
+    const char   = party.active[i];
+    const radius = _lightRadius(char);
+    if (radius <= 0) continue;
+    const pos    = party.getMemberPosition(movement.leadX, movement.leadY, i);
+    const screen = camera.worldToScreen(pos.tile_x, pos.tile_y);
+    sources.push({ x: screen.x + 16, y: screen.y + 16, radius });
+  }
+  return sources;
+}
+
+function _lightRadius(char) {
+  const eq = char.def.equipment;
+  if (!eq) return 0;
+  for (const v of Object.values(eq)) {
+    if (typeof v !== 'string') continue;
+    if (v.includes('lantern')) return LIGHT_RADII.lantern;
+    if (v.includes('torch'))   return LIGHT_RADII.torch;
+  }
+  if (char.def.tags?.includes('light_source')) return LIGHT_RADII.torch;
+  return 0;
 }
 
 // ─── Render UI ────────────────────────────────────────────────────────────────
@@ -95,33 +178,52 @@ function renderUI() {
   const ctx = renderer.getLayerContext(LAYER.UI_CHROME);
   ctx.textBaseline = 'top';
 
-  // ── Tile coords — top-right ──
-  const coordText = `Tile: ${movement.leadX}, ${movement.leadY}  [F1]`;
-  const coordBoxW = debugOverlay ? 200 : 150;
+  // ── Clock — top-right ──
+  const timeStr   = _timeString();
+  const dayStr    = `Day ${gameTime.dayNumber}`;
+  const wxIcon    = _weatherIcon(weather.getState());
+  const clockText = `${timeStr}  ${dayStr}  ${wxIcon}`;
   ctx.font = '11px monospace';
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(636 - coordBoxW, 4, coordBoxW, 18);
-  ctx.fillStyle = '#ffffff';
+  const cw = ctx.measureText(clockText).width + 14;
+  ctx.fillStyle = 'rgba(0,0,0,0.60)';
+  ctx.fillRect(636 - cw, 4, cw, 16);
+  ctx.fillStyle = '#ffe880';
   ctx.textAlign = 'right';
-  ctx.fillText(coordText, 632, 7);
+  ctx.fillText(clockText, 632, 6);
 
-  // ── Debug overlay — top-right ──
+  // ── Tile coords / debug — below clock ──
+  const coordText = debugOverlay
+    ? `Tile: ${movement.leadX}, ${movement.leadY}  Turn: ${GameState.currentTurn}`
+    : `[F1] debug`;
+  const dbW = debugOverlay ? 260 : 90;
+  ctx.font = '10px monospace';
+  ctx.fillStyle = 'rgba(0,0,0,0.50)';
+  ctx.fillRect(636 - dbW, 24, dbW, 14);
+  ctx.fillStyle = '#aaaaaa';
+  ctx.textAlign = 'right';
+  ctx.fillText(coordText, 632, 26);
+
+  // ── Extended debug info ──
   if (debugOverlay && mapData) {
     const x = movement.leadX, y = movement.leadY;
     const tile = mapData.getTile(x, y, mapData.currentFloor);
     const obj  = mapData.getObjectAt(x, y, mapData.currentFloor);
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(392, 24, 244, 74);
-    ctx.font = '11px monospace';
+    ctx.fillStyle = 'rgba(0,0,0,0.70)';
+    ctx.fillRect(392, 42, 244, 88);
+    ctx.font = '10px monospace';
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ccffcc';
-    ctx.fillText(`Tile def: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 27);
+    ctx.fillText(`Tile: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 45);
     ctx.fillStyle = '#ffcccc';
-    ctx.fillText(`passable: ${mapData.isPassable(x, y, 0)}`, 632, 41);
+    ctx.fillText(`Passable: ${mapData.isPassable(x, y, 0)}`, 632, 58);
     ctx.fillStyle = '#ccccff';
-    ctx.fillText(`object: ${obj ? obj.object_id : 'none'}`, 632, 55);
+    ctx.fillText(`Object: ${obj ? obj.object_id : 'none'}`, 632, 71);
     ctx.fillStyle = '#ffffcc';
-    ctx.fillText(`turn: ${GameState.currentTurn}`, 632, 69);
+    ctx.fillText(`Time: ${gameTime.getState()}  Turn: ${GameState.currentTurn}`, 632, 84);
+    ctx.fillStyle = '#ffccff';
+    ctx.fillText(`Weather: ${weather.getState()}`, 632, 97);
+    ctx.fillStyle = '#ccffff';
+    ctx.fillText(`Ambient: ${mapData.def.ambient_light ?? 'none'}`, 632, 110);
   }
 
   // ── Party portrait HUD — bottom-left ──
@@ -131,31 +233,35 @@ function renderUI() {
     const hx = 4 + i * 74;
     const hy = 395;
 
-    // Member name (above portrait)
     ctx.font = '9px monospace';
     ctx.textAlign = 'left';
     ctx.fillStyle = i === 0 ? '#ffffff' : '#aaaaaa';
     ctx.fillText(char.name, hx, hy);
 
-    // Portrait box
     ctx.fillStyle = 'rgba(20,20,20,0.85)';
     ctx.fillRect(hx, hy + 10, 64, 64);
     ctx.strokeStyle = i === 0 ? '#88ccff' : '#555555';
     ctx.lineWidth = 1;
     ctx.strokeRect(hx, hy + 10, 64, 64);
 
-    // Sprite preview: south-facing idle frame centered in box
     ctx.drawImage(char.getSpriteSheet(), 0, 0, 32, 32, hx + 16, hy + 18, 32, 32);
 
-    // HP bar
     const hpPct = char.hp / char.maxHp;
     ctx.fillStyle = '#2a1111';
     ctx.fillRect(hx, hy + 75, 64, 5);
     ctx.fillStyle = hpPct > 0.5 ? '#44aa44' : hpPct > 0.25 ? '#aaaa22' : '#aa2222';
     ctx.fillRect(hx, hy + 75, Math.floor(64 * hpPct), 5);
+
+    // Torch indicator
+    if (_lightRadius(char) > 0) {
+      ctx.fillStyle = '#ffaa22';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('🔦', hx + 2, hy + 82);
+    }
   }
 
-  // ── Interaction prompt — Layer 10 (DIALOGUE) ──
+  // ── Interaction prompt ──
   if (movement && movement.interactTarget) {
     const tgt  = movement.interactTarget;
     const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
@@ -172,6 +278,28 @@ function renderUI() {
     dctx.textBaseline = 'top';
     dctx.fillText(msg, screen.x + 16, by + 2);
   }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function _timeString() {
+  const h = String(gameTime.getHour()).padStart(2, '0');
+  const m = String(gameTime.getMinute()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function _weatherIcon(state) {
+  const icons = {
+    clear:      '☀',
+    overcast:   '☁',
+    rain:       '🌧',
+    heavy_rain: '⛈',
+    fog:        '🌫',
+    snow:       '🌨',
+    blizzard:   '❄',
+    storm:      '⛈',
+  };
+  return icons[state] ?? '?';
 }
 
 // ─── Launch ───────────────────────────────────────────────────────────────────

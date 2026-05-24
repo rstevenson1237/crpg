@@ -6,4 +6,5 @@
 export const GameState = {
   currentTurn: 0,
   party: null,
+  gameTime: null,   // set during init — GameTime instance
 };
