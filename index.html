@@ -909,7 +909,7 @@ function renderUI(deltaMs = 0) {
   _renderTrapOverlay(dctx);
 
   // ── Phase 13: Trap disarm prompt (standing on detected trap) ──
-  if (!Dialogue.isOpen() && !Journal.isOpen() && !InventoryUI.isOpen() && !TrainingUI.isOpen() && !combat.isActive()) {
+  if (!Dialogue.isOpen() && !Journal.isOpen() && !InventoryUI.isOpen() && !TrainingUI.isOpen() && !Combat.isActive()) {
     const onTrap = Traps.getTrapAt(movement.leadX, movement.leadY, 0);
     if (onTrap && onTrap.detected && !onTrap.triggered) {
       const screen = camera.worldToScreen(onTrap.tile_x, onTrap.tile_y);
