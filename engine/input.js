@@ -24,6 +24,8 @@ export class Input {
 
     this._tileClickCallbacks = [];
 
+    this._mouseClicked = false;
+
     this._bindEvents();
   }
 
@@ -49,6 +51,7 @@ export class Input {
 
     this._canvas.addEventListener('click', (e) => {
       this._updateMousePosition(e);
+      this._mouseClicked = true;
       const tile = this.getMouseTile();
       for (const cb of this._tileClickCallbacks) {
         cb(tile.tileX, tile.tileY, e);
@@ -116,8 +119,12 @@ export class Input {
     this._tileClickCallbacks.push(callback);
   }
 
+  /** Returns true if a mouse click was registered this frame. */
+  wasMouseClicked() { return this._mouseClicked; }
+
   /** Call at the end of each logic tick to clear single-frame key state. */
   clearFrameState() {
     this._keyPressed.clear();
+    this._mouseClicked = false;
   }
 }

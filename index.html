@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 9</title>
+  <title>CRPG Engine — Phase 10</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -41,6 +41,7 @@ import { InventoryUI }          from './ui/inventory_ui.js';
 import { Classes }              from './engine/classes.js';
 import { Abilities }            from './engine/abilities.js';
 import { Lock }                 from './engine/locks.js';
+import { CombatEngine }         from './engine/combat.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -163,6 +164,10 @@ async function init() {
   // Add window reference for console access
   window.GameState  = GameState;
   window.Party      = party;
+
+  // ── Phase 10: Combat Engine ──
+  const combat = new CombatEngine(renderer, input);
+  window.Combat = combat;
 
   // Bootstrap starting equipment from character definitions
   // Characters start with items already equipped (not from inventory)
@@ -300,6 +305,31 @@ async function init() {
       return;  // block movement while inventory is open
     }
 
+    // ── Phase 10: Combat handling ──
+    if (combat.isActive()) {
+      combat.handleInput(input);
+      input.clearFrameState();
+      return;
+    }
+
+    // C — trigger test combat
+    if (input.wasKeyPressed('KeyC') && !combat.isActive()) {
+      const fighter = party.active[0];
+      combat.initiate('test_encounter', [
+        { entity: fighter, side: 'party', tile_x: 3, tile_y: 8 },
+        { entity: { character_id: 'enemy_skeleton_01', display_name: 'Skeleton', class_id: 'skeleton',
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+          side: 'enemy', tile_x: 20, tile_y: 7 },
+        { entity: { character_id: 'enemy_skeleton_02', display_name: 'Skeleton', class_id: 'skeleton',
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+          side: 'enemy', tile_x: 20, tile_y: 10 },
+      ], (outcome) => {
+        console.log(`[Combat] Returned to overworld. Outcome: ${outcome}`);
+      });
+      input.clearFrameState();
+      return;
+    }
+
     // Decay lock toast
     if (lockToast) {
       lockToast.remainMs -= deltaMs;
@@ -355,6 +385,14 @@ async function init() {
   loop.onRender((interpolation, deltaMs) => {
     camera.update();
 
+    // ── Phase 10: Combat rendering takes over when active ──
+    if (combat.isActive()) {
+      combat.update(deltaMs);
+      combat.render();
+      renderer.composite();
+      return;
+    }
+
     // Render map layers 0–5
     mapRenderer.render(mapData, movement.leadX, movement.leadY);
 
@@ -404,9 +442,10 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 9 — Classes, Abilities & Lock System loaded.');
+  console.log('Phase 10 — Combat Engine loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
   console.log('  J = journal  |  I = inventory  |  F = search hidden');
+  console.log('  C = trigger test combat (Fighter vs 2 Skeletons)');
   console.log('');
   console.log('  Phase 9 test objects:');
   console.log('  (23,14) Locked door      — lockpick hard lock   — Thief only');
