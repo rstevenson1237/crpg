@@ -21,6 +21,9 @@ let _npcDespawnHandler  = null;  // (npcId) => void
 let _secretGrantHandler = null;  // (secretId) => void
 let _secretRevokeHandler= null;  // (secretId) => void
 let _factionHandler     = null;  // (factionId, delta) => void
+let _inventoryAddHandler    = null;  // (itemId, qty) => void
+let _inventoryRemoveHandler = null;  // (itemId, qty) => boolean
+let _lootTableRollHandler   = null;  // (tableId) => [{item_id, quantity}]
 let _mapDataRef  = null;
 let _gameTimeRef = null;
 let _weatherRef  = null;
@@ -53,6 +56,11 @@ export const Events = {
     _secretRevokeHandler = revokeFn;
   },
   setFactionHandler(fn) { _factionHandler = fn; },
+  setInventoryHandlers(addFn, removeFn, rollFn) {
+    _inventoryAddHandler    = addFn;
+    _inventoryRemoveHandler = removeFn;
+    _lootTableRollHandler   = rollFn;
+  },
   setMapData(md)   { _mapDataRef  = md; },
   setGameTime(gt)  { _gameTimeRef = gt; },
   setWeather(w)    { _weatherRef  = w; },
@@ -402,11 +410,41 @@ function _executeAction(action, next) {
       else console.log(`[Events] despawn_npc stub: ${action.npc_id}`);
       next(); break;
 
+    case 'grant_item':
+      if (_inventoryAddHandler) _inventoryAddHandler(action.item_id, action.quantity ?? 1);
+      else console.log(`[Events] grant_item stub: ${action.item_id}`);
+      next(); break;
+
+    case 'remove_item':
+      if (_inventoryRemoveHandler) _inventoryRemoveHandler(action.item_id, action.quantity ?? 1);
+      else console.log(`[Events] remove_item stub: ${action.item_id}`);
+      next(); break;
+
+    case 'place_loot_cache': {
+      const tableId = action.loot_table_id;
+      if (_lootTableRollHandler && _inventoryAddHandler) {
+        const results = _lootTableRollHandler(tableId);
+        for (const { item_id, quantity } of results) _inventoryAddHandler(item_id, quantity);
+        if (results.length > 0 && _narrationHandler) {
+          const lines = results.map(r => `• ${r.quantity}× ${r.item_id.replace('item_', '').replace(/_/g, ' ')}`).join('\n');
+          _paused = true;
+          _narrationHandler(null, `You found:\n${lines}`, () => {
+            _paused = false;
+            _drainPending();
+            next();
+          });
+          return; // intentional — resume via callback
+        }
+      } else {
+        console.log(`[Events] place_loot_cache stub: table=${tableId}`);
+      }
+      next(); break;
+    }
+
     case 'add_party_member': case 'remove_party_member':
     case 'lock_party_member': case 'unlock_party_member':
-    case 'grant_item': case 'remove_item':
     case 'grant_skill_unlock': case 'modify_npc_schedule':
-    case 'place_loot_cache': case 'trigger_encounter':
+    case 'trigger_encounter':
     case 'teleport_party': case 'grant_mentor_training':
     case 'set_music_mood':
       console.log(`[Events] Stub action: ${action.type}`);

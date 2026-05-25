@@ -1,0 +1,11 @@
+[
+  {
+    "loot_table_id": "loot_table_test_chest",
+    "rolls": 2,
+    "entries": [
+      { "item_id": "item_iron_sword",    "quantity_min": 1, "quantity_max": 1, "weight": 3 },
+      { "item_id": "item_torch",         "quantity_min": 1, "quantity_max": 3, "weight": 5 },
+      { "item_id": "item_warden_signet", "quantity_min": 1, "quantity_max": 1, "weight": 1 }
+    ]
+  }
+]

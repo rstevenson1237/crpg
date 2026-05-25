@@ -86,6 +86,66 @@
     "priority": 0
   },
   {
+    "event_id": "evt_open_loot_chest",
+    "event_label": "Open Loot Chest",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_loot_chest_01"
+    },
+    "conditions": [
+      { "condition_type": "flag_not_set", "flag_id": "flag_loot_chest_opened" }
+    ],
+    "condition_join": "and",
+    "actions": [
+      { "type": "set_flag", "flag_id": "flag_loot_chest_opened" },
+      { "type": "modify_map_object", "object_id": "obj_loot_chest_01", "new_state": "open" },
+      { "type": "place_loot_cache", "map_id": "test_town", "tile_x": 10, "tile_y": 8, "loot_table_id": "loot_table_test_chest" },
+      { "type": "add_world_log_entry", "text": "You opened the chest near the building." }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_open_loot_chest_already",
+    "event_label": "Chest Already Looted",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_loot_chest_01"
+    },
+    "conditions": [
+      { "condition_type": "flag_is_set", "flag_id": "flag_loot_chest_opened" }
+    ],
+    "condition_join": "and",
+    "actions": [
+      { "type": "show_narration", "title": null, "text": "The chest is empty." }
+    ],
+    "repeat": true,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_tome_read_revelation",
+    "event_label": "Ancient Tome Revelation",
+    "trigger": { "type": "none" },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": "The Ancient Tome",
+        "text": "The words blur and shift, but meaning filters through — fragments of a ritual performed long before the town was built. The ground beneath your feet has a history."
+      },
+      { "type": "grant_secret", "secret_id": "secret_fortress_location" },
+      { "type": "add_world_log_entry", "text": "The ancient tome revealed a buried history." }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
     "event_id": "evt_elder_revelation",
     "event_label": "Elder Reveals Fortress Location",
     "trigger": { "type": "none" },
