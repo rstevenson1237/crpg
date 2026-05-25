@@ -1,0 +1,30 @@
+[
+  {
+    "pool_id": "pool_test_wilderness",
+    "context_tags": ["wilderness", "outdoor"],
+    "encounters": [
+      {
+        "encounter_id": "enc_wolves",
+        "weight": 3,
+        "arena_template_tags": ["outdoor"],
+        "enemy_groups": [
+          { "enemy_id": "wolf", "count_min": 2, "count_max": 3, "level_modifier": 0 }
+        ],
+        "loot_table": "loot_table_wilderness_basic",
+        "is_boss": false,
+        "scripted_intro_event": null
+      },
+      {
+        "encounter_id": "enc_bandits",
+        "weight": 2,
+        "arena_template_tags": ["outdoor"],
+        "enemy_groups": [
+          { "enemy_id": "bandit", "count_min": 2, "count_max": 4, "level_modifier": 0 }
+        ],
+        "loot_table": "loot_table_wilderness_basic",
+        "is_boss": false,
+        "scripted_intro_event": null
+      }
+    ]
+  }
+]

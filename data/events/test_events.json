@@ -320,5 +320,42 @@
     "repeat": true,
     "on_complete_fire_event": null,
     "priority": 0
+  },
+  {
+    "event_id": "evt_pressure_plate_triggered",
+    "event_label": "Pressure Plate Fired",
+    "trigger": { "type": "none" },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "add_world_log_entry",
+        "text": "A pressure plate clicks underfoot — something shifts in the distance."
+      },
+      {
+        "action_type": "modify_map_object",
+        "object_id": "obj_heavy_barricade",
+        "new_state": "destroyed"
+      }
+    ],
+    "repeat": true,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_gas_vent_disarmed",
+    "event_label": "Gas Vent Disarmed",
+    "trigger": { "type": "none" },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "add_world_log_entry",
+        "text": "The gas vent is safely disabled."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
   }
 ]

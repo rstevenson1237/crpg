@@ -159,6 +159,44 @@ export class CombatGrid {
   }
 
   /**
+   * Load an arena template definition, replacing the default hardcoded layout.
+   * Tile IDs from the test tileset determine passability:
+   *   0 = grass (passable, outdoor_floor)
+   *   1 = dirt  (passable, outdoor_floor)
+   *   3 = stone floor (passable, floor)
+   *   4 = wall (impassable)
+   *   others → floor (passable)
+   * Objects from the template are applied on top of the tile layout.
+   *
+   * @param {object} def — arena template JSON definition
+   */
+  loadTemplate(def) {
+    const tileIds = def.tiles ?? [];
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const id = tileIds[y * this.width + x] ?? 3;
+        if (id === 4) {
+          this._tiles[y][x] = { passable: false, type: 'wall', tileId: id };
+        } else if (id === 0 || id === 1) {
+          this._tiles[y][x] = { passable: true, type: 'outdoor_floor', tileId: id };
+        } else {
+          this._tiles[y][x] = { passable: true, type: 'floor', tileId: id };
+        }
+      }
+    }
+
+    // Apply template objects (cover, pillars, etc.)
+    for (const obj of (def.objects ?? [])) {
+      const x = obj.tile_x, y = obj.tile_y;
+      if (x < 0 || x >= this.width || y < 0 || y >= this.height) continue;
+      const passable = obj.passable ?? false;
+      const type = passable ? 'floor' : 'pillar';
+      const baseId = tileIds[y * this.width + x] ?? 3;
+      this._tiles[y][x] = { passable, type, tileId: baseId };
+    }
+  }
+
+  /**
    * Overwrite a tile's data. Used by barriers, Breach, etc.
    * @param {number} x
    * @param {number} y
@@ -224,8 +262,15 @@ export class CombatGrid {
           objectCtx.strokeStyle = '#4a4050';
           objectCtx.lineWidth = 1;
           objectCtx.strokeRect(px + inset + 0.5, py + inset + 0.5, COMBAT_TILE - inset * 2 - 1, COMBAT_TILE - inset * 2 - 1);
+        } else if (tile.type === 'outdoor_floor') {
+          // Grass / outdoor floor
+          terrainCtx.fillStyle = '#2a4820';
+          terrainCtx.fillRect(px, py, COMBAT_TILE, COMBAT_TILE);
+          terrainCtx.strokeStyle = '#223c18';
+          terrainCtx.lineWidth = 1;
+          terrainCtx.strokeRect(px + 0.5, py + 0.5, COMBAT_TILE - 1, COMBAT_TILE - 1);
         } else {
-          // Floor tile
+          // Stone floor (default)
           terrainCtx.fillStyle = '#2d2d3a';
           terrainCtx.fillRect(px, py, COMBAT_TILE, COMBAT_TILE);
           terrainCtx.strokeStyle = '#252530';
