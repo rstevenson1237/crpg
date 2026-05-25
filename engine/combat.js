@@ -101,7 +101,7 @@ export class CombatEngine {
    * @param {function} onCombatEnd    called with outcome string
    * @param {string}   lootTableId    optional loot table to roll on victory
    */
-  initiate(encounterId, rawCombatants, onCombatEnd, lootTableId = null) {
+  initiate(encounterId, rawCombatants, onCombatEnd, lootTableId = null, arenaTemplateDef = null) {
     this._onCombatEnd   = onCombatEnd;
     this._lootTableId   = lootTableId;
     this._combatants    = [];
@@ -122,6 +122,13 @@ export class CombatEngine {
     this._lootPhase       = false;
     this._pendingLoot     = [];
     this._abilityPanelOpen = false;
+
+    // Load arena template (or reset to default hardcoded layout)
+    if (arenaTemplateDef) {
+      this._grid.loadTemplate(arenaTemplateDef);
+    } else {
+      this._grid = new CombatGrid();
+    }
 
     StatusEffects.clearAll();
 

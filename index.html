@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 12</title>
+  <title>CRPG Engine — Phase 13</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -44,6 +44,9 @@ import { Lock }                 from './engine/locks.js';
 import { CombatEngine }         from './engine/combat.js';
 import { Progression }          from './engine/progression.js';
 import { TrainingUI }           from './ui/training_ui.js';
+import { Encounters }           from './engine/encounters.js';
+import { ArenaGenerator }       from './engine/arena_generator.js';
+import { Traps }                from './engine/traps.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -79,6 +82,10 @@ let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
 // ─── Phase 9: Lock resolution toast ──────────────────────────────────────────
 // { type: "success"|"failure"|"hard_fail", text: string, remainMs: number }
 let lockToast = null;
+
+// ─── Phase 13: Trap notification toast ───────────────────────────────────────
+// { text: string, type: "detect"|"trigger"|"disarm", remainMs: number }
+let trapToast = null;
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
@@ -192,6 +199,72 @@ async function init() {
   window.Progression = Progression;
   window.TrainingUI  = TrainingUI;
 
+  // ── Phase 13: Encounters, ArenaGenerator, Traps ──
+  // Load arena templates
+  const [corridorTemplate, fieldTemplate, chamberTemplate] = await Promise.all([
+    fetch('/data/arenas/arena_stone_corridor.json').then(r => r.json()),
+    fetch('/data/arenas/arena_open_field.json').then(r => r.json()),
+    fetch('/data/arenas/arena_dungeon_chamber.json').then(r => r.json()),
+  ]);
+  ArenaGenerator.loadTemplates([corridorTemplate, fieldTemplate, chamberTemplate]);
+
+  // Load encounter pools
+  const encounterPoolData = await fetch('/data/encounters/pool_test_wilderness.json').then(r => r.json());
+  Encounters.loadPool(encounterPoolData);
+  Encounters.resetForMap('test_town');
+
+  // Wire encounter trigger → combat
+  Encounters.setOnTrigger((encounter, pool) => {
+    const arenaResult = ArenaGenerator.generate(null, encounter, party.active);
+    if (!arenaResult) { console.warn('[Encounters] ArenaGenerator returned null'); return; }
+
+    console.log(`[Encounters] Initiating combat: ${encounter.encounter_id}`);
+    combat.initiate(
+      encounter.encounter_id,
+      arenaResult.combatants,
+      (outcome) => {
+        console.log(`[Encounters] Combat ended: ${outcome}`);
+        if (outcome === 'defeat') Events.fireActionTrigger('combat_complete', { outcome: 'defeat' });
+      },
+      arenaResult.lootTableId,
+      arenaResult.template,
+    );
+  });
+
+  // Load traps from the current map
+  Traps.loadFromMap(mapData.def);
+  Traps.setFireEvent(id => Events.fireEvent(id));
+
+  Traps.setOnDetect(trap => {
+    trapToast = {
+      text: `Trap detected! ${trap.trap_type.replace('_', ' ')} at (${trap.tile_x}, ${trap.tile_y})`,
+      type: 'detect',
+      remainMs: 3000,
+    };
+  });
+
+  Traps.setOnTrigger((trap, effects) => {
+    const dmg = effects.find(e => e.type === 'deal_damage');
+    const msg = dmg
+      ? `Trap triggered! ${trap.trap_type.replace('_', ' ')} — you take ${dmg.value} damage!`
+      : `Trap triggered! ${trap.trap_type.replace('_', ' ')}!`;
+    trapToast = { text: msg, type: 'trigger', remainMs: 3500 };
+    GameState.worldLog.push({ turn: GameState.currentTurn, text: msg });
+  });
+
+  Traps.setOnDisarm(trap => {
+    trapToast = {
+      text: `Trap disarmed: ${trap.trap_type.replace('_', ' ')}.`,
+      type: 'disarm',
+      remainMs: 2500,
+    };
+  });
+
+  // Expose for console testing
+  window.Encounters     = Encounters;
+  window.ArenaGenerator = ArenaGenerator;
+  window.Traps          = Traps;
+
   // Bootstrap starting equipment from character definitions
   // Characters start with items already equipped (not from inventory)
   for (const char of party.active) {
@@ -254,6 +327,15 @@ async function init() {
   movement.setOnMove((x, y) => {
     if (!Events.isPaused()) {
       Events.checkLocationTriggers(GameState.currentMap, x, y);
+    }
+    // Phase 13: check encounter zones
+    if (!combat.isActive()) {
+      Encounters.checkZones(GameState.currentMap, x, y, mapData.def);
+    }
+    // Phase 13: check trap step (only if not already in combat)
+    if (!combat.isActive()) {
+      const lead = party.getLead();
+      if (lead) Traps.checkStep(x, y, lead, GameState.currentTurn);
     }
   });
 
@@ -378,6 +460,30 @@ async function init() {
       if (lockToast.remainMs <= 0) lockToast = null;
     }
 
+    // Decay trap toast
+    if (trapToast) {
+      trapToast.remainMs -= deltaMs;
+      if (trapToast.remainMs <= 0) trapToast = null;
+    }
+
+    // ── Phase 13: Trap passive detection (runs each tick even without movement) ──
+    if (!combat.isActive()) {
+      Traps.passiveCheck(movement.leadX, movement.leadY, party.active);
+    }
+
+    // ── Phase 13: Trap disarm (E key while standing on a detected trap) ──
+    // Must run before movement.tick() so the E press isn't consumed by NPC/object interact.
+    if (!combat.isActive() && input.wasKeyPressed('KeyE')) {
+      const onTrap = Traps.getTrapAt(movement.leadX, movement.leadY, 0);
+      if (onTrap && onTrap.detected && !onTrap.triggered) {
+        const lead = party.getLead();
+        const result = Traps.attemptDisarm(onTrap, party.active, lead, GameState.currentTurn);
+        _showLockToast(result.message, result.success ? 'success' : 'failure', 3000);
+        input.clearFrameState();  // consume E so movement.tick() doesn't double-fire
+        return;
+      }
+    }
+
     const prevTurn = GameState.currentTurn;
     movement.tick(deltaMs);
     const movementDelta = GameState.currentTurn - prevTurn;
@@ -385,6 +491,7 @@ async function init() {
     if (movementDelta > 0) {
       gameTime.advance(movementDelta);
       Events.tick(GameState.currentTurn);
+      Traps.onTurnAdvance(GameState.currentTurn);
       // ── Phase 6: Update NPC schedules and facing ──
       NPCs.update(gameTime);
       NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
@@ -400,8 +507,19 @@ async function init() {
     // I — toggle inventory
     if (input.wasKeyPressed('KeyI')) InventoryUI.toggle();
 
-    // F — spatial secret search around player
-    if (input.wasKeyPressed('KeyF')) Secrets.search(mapData, movement.leadX, movement.leadY);
+    // F — spatial secret search + active trap detection on faced tile
+    if (input.wasKeyPressed('KeyF')) {
+      Secrets.search(mapData, movement.leadX, movement.leadY);
+      // Determine faced tile
+      const facedTile = _getFacedTile(movement);
+      if (facedTile) {
+        const found = Traps.activeSearch(facedTile.x, facedTile.y, party.active);
+        if (!found) {
+          // Show brief "nothing found" feedback
+          trapToast = { text: 'You search carefully but find no traps here.', type: 'detect', remainMs: 1800 };
+        }
+      }
+    }
 
     // T — advance 12 turns (~2 in-world hours) without moving
     if (input.wasKeyPressed('KeyT')) {
@@ -487,10 +605,27 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 12 — Progression System loaded.');
+  console.log('Phase 13 — Encounter Generation & Traps loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
-  console.log('  J = journal  |  I = inventory  |  F = search hidden');
+  console.log('  J = journal  |  I = inventory  |  F = search / detect traps');
   console.log('  C = trigger test combat (4 party vs 3 skeletons)');
+  console.log('');
+  console.log('  Phase 13 test — Encounter Zones:');
+  console.log('  Walk to x>25 (eastern map edge) → 12% chance of random encounter per step');
+  console.log('  Encounters: wolves (3 weight) or bandits (2 weight)');
+  console.log('  Arena templates: stone_corridor, open_field, dungeon_chamber');
+  console.log('');
+  console.log('  Phase 13 test — Traps (y≈25-27 area):');
+  console.log('  (10,25)(14,25)(18,25) — hidden spike traps (Thief passive detects within 3 tiles)');
+  console.log('  (12,27) — pressure plate (visible, fires event on step)');
+  console.log('  (16,27) — gas vent (hidden, Thief-only disarm)');
+  console.log('  F = active search facing tile  |  E on detected trap = disarm attempt');
+  console.log('');
+  console.log('  Console shortcuts:');
+  console.log('  ArenaGenerator.selectTemplate(["outdoor"])  → select open field template');
+  console.log('  ArenaGenerator.generate(null, Encounters.getPool("pool_test_wilderness").encounters[0], Party.active)');
+  console.log('  Traps.getAllTraps()  → inspect all trap objects');
+  console.log('  Traps.passiveCheck(10,25, Party.active)  → force passive check');
   console.log('');
   console.log('  Phase 12 test — Progression:');
   console.log('  Talk to Elder Maris (15,10) → "Could you teach me something?" → training UI');
@@ -510,6 +645,18 @@ async function init() {
   console.log('  Party.setMax(1)  → solo party for hard-lock testing');
   console.log('  Party.setLead("char_thief_kael")  → switch to Thief lead');
   console.log('  GameState.party.members[0].use_tracked_skills  → check use counts');
+}
+
+// ─── Phase 13: Helpers ────────────────────────────────────────────────────────
+
+/** Return the tile one step ahead of the party lead in the current facing direction. */
+function _getFacedTile(movement) {
+  const lead = party.getLead();
+  if (!lead) return null;
+  const dir = lead.facing;
+  const dx  = dir === 'east' ? 1 : dir === 'west' ? -1 : 0;
+  const dy  = dir === 'south' ? 1 : dir === 'north' ? -1 : 0;
+  return { x: movement.leadX + dx, y: movement.leadY + dy };
 }
 
 // ─── Phase 9: Lock interaction resolution ────────────────────────────────────
@@ -754,6 +901,31 @@ function renderUI(deltaMs = 0) {
 
   // ── Phase 9: Lock result toast ──
   if (lockToast) _renderLockToast(dctx, lockToast);
+
+  // ── Phase 13: Trap toast ──
+  if (trapToast) _renderTrapToast(dctx, trapToast);
+
+  // ── Phase 13: Trap indicators on map ──
+  _renderTrapOverlay(dctx);
+
+  // ── Phase 13: Trap disarm prompt (standing on detected trap) ──
+  if (!Dialogue.isOpen() && !Journal.isOpen() && !InventoryUI.isOpen() && !TrainingUI.isOpen() && !combat.isActive()) {
+    const onTrap = Traps.getTrapAt(movement.leadX, movement.leadY, 0);
+    if (onTrap && onTrap.detected && !onTrap.triggered) {
+      const screen = camera.worldToScreen(onTrap.tile_x, onTrap.tile_y);
+      const msg = 'Press E to disarm trap';
+      dctx.font = '10px monospace';
+      const tw = dctx.measureText(msg).width + 12;
+      const bx = screen.x + 16 - tw / 2;
+      const by = screen.y - 20;
+      dctx.fillStyle    = 'rgba(60,20,20,0.90)';
+      dctx.fillRect(bx, by, tw, 14);
+      dctx.fillStyle    = '#ff8888';
+      dctx.textAlign    = 'center';
+      dctx.textBaseline = 'top';
+      dctx.fillText(msg, screen.x + 16, by + 2);
+    }
+  }
 }
 
 // ─── Narration card ────────────────────────────────────────────────────────────
@@ -900,6 +1072,72 @@ function _weatherIcon(state) {
     storm:      '⛈',
   };
   return icons[state] ?? '?';
+}
+
+// ─── Phase 13: Trap overlay renderer ─────────────────────────────────────────
+
+/**
+ * Draw small skull/warning markers over detected traps on the world map.
+ */
+function _renderTrapOverlay(ctx) {
+  const detected = Traps.getDetectedTraps();
+  for (const trap of detected) {
+    const screen = camera.worldToScreen(trap.tile_x, trap.tile_y);
+    const cx = screen.x + 16;
+    const cy = screen.y + 16;
+
+    ctx.save();
+    // Pulsing red glow
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 400);
+    ctx.globalAlpha = 0.6 + 0.4 * pulse;
+
+    // Red X marker
+    ctx.strokeStyle = '#ff4444';
+    ctx.lineWidth   = 2;
+    ctx.beginPath(); ctx.moveTo(cx - 5, cy - 5); ctx.lineTo(cx + 5, cy + 5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 5, cy - 5); ctx.lineTo(cx - 5, cy + 5); ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+/**
+ * Render a trap notification toast.
+ */
+function _renderTrapToast(ctx, toast) {
+  const COLORS = {
+    detect:  { bg: '#1a1a2a', border: '#4444ff', text: '#aaaaff' },
+    trigger: { bg: '#2a0a0a', border: '#ff4444', text: '#ffaaaa' },
+    disarm:  { bg: '#0a1a0a', border: '#44ff44', text: '#aaffaa' },
+  };
+  const scheme = COLORS[toast.type] ?? COLORS.detect;
+
+  ctx.save();
+  ctx.font = '11px monospace';
+
+  const maxWidth = 400;
+  const lines    = _wrapText(ctx, toast.text, maxWidth);
+  const PW       = maxWidth + 24;
+  const PH       = lines.length * 15 + 16;
+  const px       = Math.round((640 - PW) / 2);
+  const py       = 310;
+
+  const alpha = toast.remainMs < 600 ? (toast.remainMs / 600) : 1.0;
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle   = scheme.bg;
+  ctx.fillRect(px, py, PW, PH);
+  ctx.strokeStyle = scheme.border;
+  ctx.lineWidth   = 1;
+  ctx.strokeRect(px, py, PW, PH);
+
+  ctx.fillStyle    = scheme.text;
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => ctx.fillText(line, px + 12, py + 8 + i * 15));
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 // ─── Lock toast renderer ──────────────────────────────────────────────────────
