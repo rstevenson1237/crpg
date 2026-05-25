@@ -1,0 +1,100 @@
+{
+  "dialogue_id": "npc_town_elder",
+  "nodes": [
+    {
+      "node_id": "dlg_elder_root",
+      "speaker_id": "npc_town_elder",
+      "speaker_portrait": null,
+      "text": "Ah, a traveler. Welcome to our town. I am Elder Maris, keeper of its histories. What brings you to seek me out?",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "Tell me about the fortress.",
+          "target_node": "dlg_elder_fortress",
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        },
+        {
+          "option_text": "Farewell.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    },
+    {
+      "node_id": "dlg_elder_fortress",
+      "speaker_id": "npc_town_elder",
+      "speaker_portrait": null,
+      "text": "The old fortress... yes, Ironhold. A place of dark history. The Warden who once commanded it vanished under strange circumstances. I suspect there are those who know more than they let on.",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "What happened to the Warden?",
+          "target_node": "dlg_elder_warden",
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        },
+        {
+          "option_text": "I found a letter bearing the Warden's seal.",
+          "target_node": "dlg_elder_secret_reveal",
+          "visible_condition": {
+            "condition_type": "secret_known",
+            "secret_id": "secret_warden_letter"
+          },
+          "enabled_condition": null,
+          "on_select_fire_event": "evt_elder_revelation",
+          "action": null
+        },
+        {
+          "option_text": "I see. Thank you.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    },
+    {
+      "node_id": "dlg_elder_warden",
+      "speaker_id": "npc_town_elder",
+      "speaker_portrait": null,
+      "text": "I do not know precisely. One evening he was present, and by morning, gone. The garrison found his chambers empty. His personal correspondence — sealed with his mark — was never recovered. If you happen upon anything bearing his seal, come find me.",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "I will keep my eyes open.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    },
+    {
+      "node_id": "dlg_elder_secret_reveal",
+      "speaker_id": "npc_town_elder",
+      "speaker_portrait": null,
+      "text": "A letter bearing his seal? Let me see... Yes. This is genuine. The Warden wrote of a hidden approach to Ironhold — a passage beneath the western cliffs. This changes things considerably. You must be careful.",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "Thank you, Elder.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    }
+  ]
+}

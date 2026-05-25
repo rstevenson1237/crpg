@@ -1,0 +1,299 @@
+[
+  {
+    "event_id": "evt_ten_turns",
+    "event_label": "Ten Turns Passed",
+    "trigger": {
+      "type": "timeline",
+      "reference": "game_start",
+      "after_event": null,
+      "delay_turns": 10
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "The sun has moved. Ten turns have passed."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_crossroads",
+    "event_label": "The Crossroads",
+    "trigger": {
+      "type": "location_tile",
+      "map_id": "test_town",
+      "tile_x": 20,
+      "tile_y": 15,
+      "trigger_radius": 0
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "You stand at the crossroads."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_chest_interact",
+    "event_label": "Chest Interaction",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_locked_chest_01"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "set_flag",
+        "flag_id": "chest_touched"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "Someone touched the chest."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": "evt_chest_rattles",
+    "priority": 0
+  },
+  {
+    "event_id": "evt_chest_rattles",
+    "event_label": "The Chest Rattles",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "The chest rattles."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_open_loot_chest",
+    "event_label": "Open Loot Chest",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_loot_chest_01"
+    },
+    "conditions": [
+      {
+        "condition_type": "flag_not_set",
+        "flag_id": "flag_loot_chest_opened"
+      }
+    ],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "set_flag",
+        "flag_id": "flag_loot_chest_opened"
+      },
+      {
+        "type": "modify_map_object",
+        "object_id": "obj_loot_chest_01",
+        "new_state": "open"
+      },
+      {
+        "type": "place_loot_cache",
+        "map_id": "test_town",
+        "tile_x": 10,
+        "tile_y": 8,
+        "loot_table_id": "loot_table_test_chest"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "You opened the chest near the building."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_open_loot_chest_already",
+    "event_label": "Chest Already Looted",
+    "trigger": {
+      "type": "action",
+      "action_kind": "object_interacted",
+      "object_id": "obj_loot_chest_01"
+    },
+    "conditions": [
+      {
+        "condition_type": "flag_is_set",
+        "flag_id": "flag_loot_chest_opened"
+      }
+    ],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": null,
+        "text": "The chest is empty."
+      }
+    ],
+    "repeat": true,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_tome_read_revelation",
+    "event_label": "Ancient Tome Revelation",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "show_narration",
+        "title": "The Ancient Tome",
+        "text": "The words blur and shift, but meaning filters through \u2014 fragments of a ritual performed long before the town was built. The ground beneath your feet has a history."
+      },
+      {
+        "type": "grant_secret",
+        "secret_id": "secret_fortress_location"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The ancient tome revealed a buried history."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_elder_revelation",
+    "event_label": "Elder Reveals Fortress Location",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "grant_secret",
+        "secret_id": "secret_fortress_location"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The elder revealed the fortress location."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_thief_door_unlocked",
+    "event_label": "Thief Door Unlocked",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "set_flag",
+        "flag_id": "flag_thief_door_open"
+      },
+      {
+        "type": "modify_map_object",
+        "object_id": "obj_locked_thief_door",
+        "new_state": "open"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The locked door clicked open."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_glyph_read",
+    "event_label": "Glyph Inscription Read",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "grant_secret",
+        "secret_id": "secret_glyph_inscription"
+      },
+      {
+        "type": "set_flag",
+        "flag_id": "flag_glyph_read"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The mage deciphered the ancient inscription."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_barricade_breached",
+    "event_label": "Barricade Breached",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "set_flag",
+        "flag_id": "flag_barricade_destroyed"
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "The barricade has been broken through."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
+    "event_id": "evt_barricade_held",
+    "event_label": "Barricade Held",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "add_world_log_entry",
+        "text": "The barricade held against your effort."
+      }
+    ],
+    "repeat": true,
+    "on_complete_fire_event": null,
+    "priority": 0
+  }
+]

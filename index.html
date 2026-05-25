@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRPG Engine — Phase 10</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<script type="module">
+import { Renderer, LAYER }      from './engine/renderer.js';
+import { Camera }               from './engine/camera.js';
+import { Input }                from './engine/input.js';
+import { GameLoop }             from './engine/gameloop.js';
+import { loadMap, MapRenderer } from './engine/map.js';
+import { Character }            from './engine/character.js';
+import { Party }                from './engine/party.js';
+import { MovementController }   from './engine/movement.js';
+import { GameState }            from './engine/gamestate.js';
+import { GameTime }             from './engine/time.js';
+import { Lighting }             from './engine/lighting.js';
+import { Weather, WEATHER_CYCLE } from './engine/weather.js';
+import { Events }               from './engine/events.js';
+import { NPCs }                 from './engine/npc.js';
+import { Dialogue }             from './engine/dialogue.js';
+import { Secrets }              from './engine/secrets.js';
+import { Factions }             from './engine/factions.js';
+import { Journal }              from './ui/journal.js';
+import { Items, LootTables }    from './engine/items.js';
+import { Inventory }            from './engine/inventory.js';
+import { Equipment }            from './engine/equipment.js';
+import { InventoryUI }          from './ui/inventory_ui.js';
+import { Classes }              from './engine/classes.js';
+import { Abilities }            from './engine/abilities.js';
+import { Lock }                 from './engine/locks.js';
+import { CombatEngine }         from './engine/combat.js';
+
+// ─── Engine Setup ─────────────────────────────────────────────────────────────
+const renderer = new Renderer();
+const camera   = new Camera();
+const loop     = new GameLoop(100);
+const input    = new Input(renderer.canvas, camera, () => renderer.scale);
+
+// ─── Phase 4: Time, Lighting, Weather ────────────────────────────────────────
+const gameTime = new GameTime();
+const lighting = new Lighting(renderer, gameTime);
+const weather  = new Weather(renderer);
+
+GameState.gameTime = gameTime;
+
+// ─── Game State ───────────────────────────────────────────────────────────────
+let mapData      = null;
+let mapRenderer  = null;
+let party        = null;
+let movement     = null;
+let debugOverlay = false;   // F1
+let worldLogVisible = false; // L
+
+// Debug weather cycle index
+let weatherIdx = 0;
+
+// ─── Phase 5: Narration card + screen fade ────────────────────────────────────
+let narrationCard = null;  // { title, text, onDismiss, startMs }
+let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
+
+// ─── Phase 6: Dialogue ────────────────────────────────────────────────────────
+// Dialogue and Journal are managed by their modules. isOpen() checked in tick loop.
+
+// ─── Phase 9: Lock resolution toast ──────────────────────────────────────────
+// { type: "success"|"failure"|"hard_fail", text: string, remainMs: number }
+let lockToast = null;
+
+// ─── Bootstrap ────────────────────────────────────────────────────────────────
+async function init() {
+  mapData     = await loadMap('/data/maps/test_town.json');
+  mapRenderer = new MapRenderer(renderer, camera);
+  lighting.setMapData(mapData);
+
+  const [aldricDef, lyriaDef, kaelDef, miraDef] = await Promise.all([
+    fetch('/data/characters/char_fighter_aldric.json').then(r => r.json()),
+    fetch('/data/characters/char_mage_lyria.json').then(r => r.json()),
+    fetch('/data/characters/char_thief_kael.json').then(r => r.json()),
+    fetch('/data/characters/char_cleric_mira.json').then(r => r.json()),
+  ]);
+
+  const aldric = new Character(aldricDef);
+  const lyria  = new Character(lyriaDef);
+  const kael   = new Character(kaelDef);
+  const mira   = new Character(miraDef);
+
+  party = new Party();
+  GameState.party = party;
+  party.setMax(4);
+  party.addMember(aldric);
+  party.addMember(lyria);
+  party.addMember(kael);
+  party.addMember(mira);
+
+  // ── Phase 9: Classes, Abilities ──
+  const [classesData, abilitiesData] = await Promise.all([
+    fetch('/data/classes/core_classes.json').then(r => r.json()),
+    fetch('/data/abilities/core_abilities.json').then(r => r.json()),
+  ]);
+  Classes.load(classesData);
+  Abilities.loadRegistry(abilitiesData);
+
+  // Make globals accessible for console testing
+  window.Classes   = Classes;
+  window.Abilities = Abilities;
+  window.Lock      = Lock;
+
+  movement = new MovementController(input, mapData, party, camera, GameState);
+  movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
+
+  // ── Phase 7: Secrets & Factions ──
+  const [secretsData, factionsData] = await Promise.all([
+    fetch('/data/secrets/test_secrets.json').then(r => r.json()),
+    fetch('/data/factions/test_factions.json').then(r => r.json()),
+  ]);
+  Secrets.load(secretsData);
+  Factions.load(factionsData);
+
+  // ── Phase 8: Items, Inventory, Equipment ──
+  const [itemsData, lootTablesData] = await Promise.all([
+    fetch('/data/items/test_items.json').then(r => r.json()),
+    fetch('/data/items/loot_tables.json').then(r => r.json()),
+  ]);
+  Items.loadRegistry(itemsData);
+  LootTables.load(lootTablesData);
+
+  // Wire inventory handlers so events can grant/remove items
+  Inventory.setHandlers({
+    onGrantSecret: id  => Secrets.grant(id),
+    onFireEvent:   id  => Events.fireActionTrigger('manual_event', { event_id: id }),
+    onShowMsg:     msg => console.log('[Inventory]', msg),
+  });
+
+  // Wire equipment handlers for on-equip effects
+  Equipment.setHandlers({
+    onFireEvent:   id              => Events.fireActionTrigger('manual_event', { event_id: id }),
+    onGrantSecret: id              => Secrets.grant(id),
+    onGrantSkill:  (charId, skill) => console.log(`[Equipment] Skill unlocked: ${skill} for ${charId}`),
+    getParty:      ()              => party,
+  });
+
+  // Wire event engine's inventory actions
+  Events.setInventoryHandlers(
+    (itemId, qty) => Inventory.add(itemId, qty),
+    (itemId, qty) => Inventory.remove(itemId, qty),
+    (tableId)     => LootTables.roll(tableId),
+  );
+
+  // Initialise InventoryUI
+  InventoryUI.init(renderer, input);
+
+  // Add window reference for console access
+  window.GameState  = GameState;
+  window.Party      = party;
+
+  // ── Phase 10: Combat Engine ──
+  const combat = new CombatEngine(renderer, input);
+  window.Combat = combat;
+
+  // Bootstrap starting equipment from character definitions
+  // Characters start with items already equipped (not from inventory)
+  for (const char of party.active) {
+    Equipment.initFromCharDef(char.id, char.def);
+  }
+
+  // Add starting torch to inventory (so the party has one to use/transfer)
+  Inventory.add('item_torch', 1);
+
+  Events.setSecretHandlers(
+    id         => Secrets.grant(id),
+    id         => Secrets.revoke(id)
+  );
+  Events.setFactionHandler((id, delta) => Factions.modify(id, delta));
+
+  // ── Phase 6: NPC system init ──
+  Dialogue.init(renderer, input);
+  Journal.init(renderer, input);
+
+  const npcsData = await fetch('/data/npcs/test_npcs.json').then(r => r.json());
+  NPCs.load(npcsData);
+  NPCs.spawnForMap('test_town');
+
+  // Let movement controller check NPC tiles for blocking
+  movement.setNPCLookup((x, y) => NPCs.getAtTile(GameState.currentMap, x, y));
+
+  // E-key on NPC → open dialogue
+  movement.setOnNPCInteract((npc) => {
+    if (!Dialogue.isOpen()) {
+      Dialogue.open(npc.def.npc_id, npc.dialogueRoot);
+    }
+  });
+
+  // Wire Events.show_dialogue action to Dialogue module
+  Events.setDialogueHandler((npcId, rootNodeId, onClose) => {
+    Dialogue.open(npcId, rootNodeId).then(() => {
+      // Dialogue.close() fires its own npc_dialogue_completed trigger;
+      // onClose() resumes the event queue. Wire it via a polling check or
+      // store and call on next Dialogue.close().
+      // Simplest: resolve immediately and let the action complete.
+      onClose();
+    });
+  });
+
+  // Wire spawn/despawn NPC actions
+  Events.setNPCHandlers(
+    (npcId, mapId, x, y) => NPCs.spawn(npcId, mapId, x, y),
+    (npcId) => NPCs.despawn(npcId)
+  );
+
+  // ── Phase 9: Lock-aware interaction handler ──
+  movement.setOnInteract((obj) => {
+    if (obj.interaction_type && obj.lock_type) {
+      _resolveLockInteraction(obj);
+    } else {
+      Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+    }
+  });
+
+  movement.setOnMove((x, y) => {
+    if (!Events.isPaused()) {
+      Events.checkLocationTriggers(GameState.currentMap, x, y);
+    }
+  });
+
+  camera.setMapBounds(mapData.width, mapData.height);
+  camera.snapTo(movement.leadX, movement.leadY);
+
+  // ── Phase 5: Load events ──
+  const eventsData = await fetch('/data/events/test_events.json').then(r => r.json());
+  Events.load(eventsData);
+  Events.setMapData(mapData);
+  Events.setGameTime(gameTime);
+  Events.setWeather(weather);
+
+  Events.setNarrationHandler((title, text, onDismiss) => {
+    narrationCard = { title, text, onDismiss, startMs: performance.now() };
+  });
+
+  Events.setScreenFadeHandler((direction, color, durationMs, onDone) => {
+    screenFade = { direction, color, durationMs, onDone, startMs: performance.now() };
+  });
+
+  GameState.currentMap = 'test_town';
+
+  // ── Log state changes ──
+  gameTime.onStateChange((newState, oldState) => {
+    console.log(`Time → ${newState}  (${_timeString()}  Day ${gameTime.dayNumber})`);
+  });
+
+  loop.onTick((deltaMs) => {
+    // Narration card: dismiss on any keypress
+    if (narrationCard && input.wasAnyKeyPressed()) {
+      const cb = narrationCard.onDismiss;
+      narrationCard = null;
+      cb();
+      input.clearFrameState();
+      return;
+    }
+
+    // Block all other input while event engine is paused (screen_fade, etc.)
+    if (Events.isPaused()) {
+      input.clearFrameState();
+      return;
+    }
+
+    // ── Phase 6: Dialogue input handling ──
+    if (Dialogue.isOpen()) {
+      if (input.wasKeyPressed('Space'))   Dialogue.handleKey('Space');
+      if (input.wasKeyPressed('Escape'))  Dialogue.handleKey('Escape');
+      if (input.wasKeyPressed('Digit1'))  Dialogue.handleKey('Digit1');
+      if (input.wasKeyPressed('Digit2'))  Dialogue.handleKey('Digit2');
+      if (input.wasKeyPressed('Digit3'))  Dialogue.handleKey('Digit3');
+      if (input.wasKeyPressed('Digit4'))  Dialogue.handleKey('Digit4');
+      input.clearFrameState();
+      return;  // block movement while dialogue is open
+    }
+
+    // ── Phase 7: Journal input handling ──
+    if (Journal.isOpen()) {
+      for (const code of ['Escape','KeyJ','Digit1','Digit2','Digit3','Digit4','ArrowUp','ArrowDown']) {
+        if (input.wasKeyPressed(code)) Journal.handleKey(code);
+      }
+      input.clearFrameState();
+      return;  // block movement while journal is open
+    }
+
+    // ── Phase 8: Inventory input handling ──
+    if (InventoryUI.isOpen()) {
+      if (input.wasKeyPressed('Escape') || input.wasKeyPressed('KeyI')) {
+        InventoryUI.handleKey('Escape');
+      }
+      input.clearFrameState();
+      return;  // block movement while inventory is open
+    }
+
+    // ── Phase 10: Combat handling ──
+    if (combat.isActive()) {
+      combat.handleInput(input);
+      input.clearFrameState();
+      return;
+    }
+
+    // C — trigger test combat
+    if (input.wasKeyPressed('KeyC') && !combat.isActive()) {
+      const fighter = party.active[0];
+      combat.initiate('test_encounter', [
+        { entity: fighter, side: 'party', tile_x: 3, tile_y: 8 },
+        { entity: { character_id: 'enemy_skeleton_01', display_name: 'Skeleton', class_id: 'skeleton',
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+          side: 'enemy', tile_x: 20, tile_y: 7 },
+        { entity: { character_id: 'enemy_skeleton_02', display_name: 'Skeleton', class_id: 'skeleton',
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+          side: 'enemy', tile_x: 20, tile_y: 10 },
+      ], (outcome) => {
+        console.log(`[Combat] Returned to overworld. Outcome: ${outcome}`);
+      });
+      input.clearFrameState();
+      return;
+    }
+
+    // Decay lock toast
+    if (lockToast) {
+      lockToast.remainMs -= deltaMs;
+      if (lockToast.remainMs <= 0) lockToast = null;
+    }
+
+    const prevTurn = GameState.currentTurn;
+    movement.tick(deltaMs);
+    const movementDelta = GameState.currentTurn - prevTurn;
+
+    if (movementDelta > 0) {
+      gameTime.advance(movementDelta);
+      Events.tick(GameState.currentTurn);
+      // ── Phase 6: Update NPC schedules and facing ──
+      NPCs.update(gameTime);
+      NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
+      // checkLocationTriggers is fired by setOnMove callback above
+    } else {
+      // Update facing even when stationary (player turns in place)
+      NPCs.updateFacing(GameState.currentMap, movement.leadX, movement.leadY);
+    }
+
+    // J — toggle journal
+    if (input.wasKeyPressed('KeyJ')) Journal.toggle();
+
+    // I — toggle inventory
+    if (input.wasKeyPressed('KeyI')) InventoryUI.toggle();
+
+    // F — spatial secret search around player
+    if (input.wasKeyPressed('KeyF')) Secrets.search(mapData, movement.leadX, movement.leadY);
+
+    // T — advance 12 turns (~2 in-world hours) without moving
+    if (input.wasKeyPressed('KeyT')) {
+      gameTime.advance(12);
+      NPCs.update(gameTime);
+      console.log(`Time skip → ${gameTime.getState()}  (${_timeString()})`);
+    }
+
+    // W — cycle weather (W also triggers north movement, acceptable for demo)
+    if (input.wasKeyPressed('KeyW')) {
+      weatherIdx = (weatherIdx + 1) % WEATHER_CYCLE.length;
+      const next = WEATHER_CYCLE[weatherIdx];
+      weather.setState(next);
+      console.log(`Weather → ${next}`);
+    }
+
+    if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
+    if (input.wasKeyPressed('KeyL')) worldLogVisible = !worldLogVisible;
+
+    input.clearFrameState();
+  });
+
+  loop.onRender((interpolation, deltaMs) => {
+    camera.update();
+
+    // ── Phase 10: Combat rendering takes over when active ──
+    if (combat.isActive()) {
+      combat.update(deltaMs);
+      combat.render();
+      renderer.composite();
+      return;
+    }
+
+    // Render map layers 0–5
+    mapRenderer.render(mapData, movement.leadX, movement.leadY);
+
+    // Render party (layer 4) — clears CHARACTERS + ENTITY_SHADOW, draws party
+    party.render(renderer, camera, movement.leadX, movement.leadY, deltaMs);
+
+    // Render NPCs (layer 4) — draws on top of party layer (Y-sorted among themselves)
+    NPCs.render(renderer, camera, GameState.currentMap, deltaMs);
+
+    // ── Weather (Layer 6) ──
+    const leadScreen = camera.worldToScreen(movement.leadX, movement.leadY);
+    weather.setPlayerScreenPos(leadScreen.x + 16, leadScreen.y + 16);
+    weather.update(deltaMs);
+
+    // ── Lighting (Layer 7) ──
+    const lightSources = _buildLightSources();
+    lighting.render(deltaMs, lightSources);
+
+    // ── UI (Layer 9 + 10) ──
+    renderUI(deltaMs);
+
+    // ── Screen fade (Layer 11) ──
+    renderer.clearLayer(LAYER.TRANSITION);
+    if (screenFade) {
+      const elapsed = performance.now() - screenFade.startMs;
+      const t       = Math.min(elapsed / screenFade.durationMs, 1.0);
+      const alpha   = screenFade.direction === 'out' ? t : 1 - t;
+      if (alpha > 0.001) {
+        const fctx = renderer.getLayerContext(LAYER.TRANSITION);
+        fctx.globalAlpha = alpha;
+        fctx.fillStyle   = screenFade.color;
+        fctx.fillRect(0, 0, 640, 480);
+        fctx.globalAlpha = 1;
+      }
+      if (t >= 1.0) {
+        const onDone = screenFade.onDone;
+        screenFade = null;
+        onDone();
+      }
+    }
+
+    renderer.composite();
+  });
+
+  loop.start();
+
+  // Fire map-enter triggers (after all handlers are registered)
+  Events.checkMapEnter('test_town');
+
+  console.log('Phase 10 — Combat Engine loaded.');
+  console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
+  console.log('  J = journal  |  I = inventory  |  F = search hidden');
+  console.log('  C = trigger test combat (Fighter vs 2 Skeletons)');
+  console.log('');
+  console.log('  Phase 9 test objects:');
+  console.log('  (23,14) Locked door      — lockpick hard lock   — Thief only');
+  console.log('  (28,10) Glyph inscription — glyph_reading hard  — Mage only');
+  console.log('  (5,22)  Heavy barricade  — breach soft lock     — Fighter advantage (70% fail others)');
+  console.log('  (15,22) Suspicious barrel — search_hidden soft  — Thief finds secret');
+  console.log('');
+  console.log('  Console shortcuts:');
+  console.log('  Classes.get("fighter")  → class definition');
+  console.log('  Lock.resolve("lockpick","hard",[{class_id:"thief"}])  → test resolver');
+  console.log('  Party.setMax(1)  → solo party for hard-lock testing');
+  console.log('  Party.setLead("char_thief_kael")  → switch to Thief lead');
+  console.log('  GameState.party.members[0].use_tracked_skills  → check use counts');
+}
+
+// ─── Phase 9: Lock interaction resolution ────────────────────────────────────
+
+/**
+ * Resolve a lock-gated object interaction, show appropriate UI feedback,
+ * execute inline actions, track ability use, and fire result events.
+ * @param {object} obj  — map object definition
+ */
+function _resolveLockInteraction(obj) {
+  const result = Lock.resolve(
+    obj.interaction_type,
+    obj.lock_type,
+    party.active,
+    obj.soft_outcomes ?? null,
+  );
+
+  console.log(`[Lock] ${obj.object_id} (${obj.interaction_type}/${obj.lock_type}) → ${result.outcome}`);
+
+  // ── UI feedback ──
+  if (!result.success) {
+    if (result.outcome === 'hard_lock_fail') {
+      const classes = result.required_classes?.map(c => c.class_label).join(' or ') ?? 'a specialist';
+      _showLockToast(`Requires ${classes} — ${result.description}`, 'hard_fail', 3500);
+    } else {
+      _showLockToast(result.description, 'failure', 2500);
+    }
+    // Fire on_fail_event if defined
+    if (obj.on_fail_event) Events.fireEvent(obj.on_fail_event);
+    return;
+  }
+
+  // Success feedback by outcome type
+  if (result.outcome === 'class_advantage') {
+    _showLockToast(result.description, 'success', 2200);
+  } else if (result.outcome === 'class_disadvantage_success') {
+    _showLockToast(result.description, 'success', 2200);
+  } else if (result.outcome === 'no_class_success') {
+    _showLockToast(`You manage it, but awkwardly. ${result.description}`, 'neutral', 2500);
+  }
+
+  // Execute inline action from soft_outcomes (e.g. modify_map_object, grant_secret)
+  if (result.action) {
+    Events.executeAction(result.action);
+  }
+
+  // Track ability use on the acting character
+  if (result.ability_id && result.acting_char_def) {
+    Abilities.recordUse(result.acting_char_def, result.ability_id);
+  }
+
+  // Fire the success event
+  if (obj.on_interact_event) Events.fireEvent(obj.on_interact_event);
+
+  // Also fire generic object_interacted for any event listeners watching this object
+  Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+}
+
+/**
+ * Show a lock resolution toast with colour-coded feedback.
+ * @param {string} text
+ * @param {"success"|"neutral"|"failure"|"hard_fail"} type
+ * @param {number} durationMs
+ */
+function _showLockToast(text, type, durationMs) {
+  lockToast = { text, type, remainMs: durationMs };
+}
+
+// ─── Build light sources from party equipment ─────────────────────────────────
+
+const LIGHT_RADII = { torch: 4 * 32, lantern: 6 * 32 };
+
+function _buildLightSources() {
+  const sources = [];
+  if (!party) return sources;
+  for (let i = 0; i < party.active.length; i++) {
+    const char   = party.active[i];
+    const radius = _lightRadius(char);
+    if (radius <= 0) continue;
+    const pos    = party.getMemberPosition(movement.leadX, movement.leadY, i);
+    const screen = camera.worldToScreen(pos.tile_x, pos.tile_y);
+    sources.push({ x: screen.x + 16, y: screen.y + 16, radius });
+  }
+  return sources;
+}
+
+function _lightRadius(char) {
+  // Phase 8: check Equipment module first
+  const { radius } = Equipment.getLightRadius(char.id);
+  if (radius > 0) return radius;
+
+  // Fallback: check character def's equipment field (for backward compat)
+  const eq = char.def.equipment;
+  if (!eq) return 0;
+  for (const v of Object.values(eq)) {
+    if (typeof v !== 'string') continue;
+    if (v.includes('lantern')) return LIGHT_RADII.lantern;
+    if (v.includes('torch'))   return LIGHT_RADII.torch;
+  }
+  if (char.def.tags?.includes('light_source')) return LIGHT_RADII.torch;
+  return 0;
+}
+
+// ─── Render UI ────────────────────────────────────────────────────────────────
+
+function renderUI(deltaMs = 0) {
+  renderer.clearLayer(LAYER.UI_CHROME);
+  renderer.clearLayer(LAYER.DIALOGUE);
+
+  const ctx = renderer.getLayerContext(LAYER.UI_CHROME);
+  ctx.textBaseline = 'top';
+
+  // ── Clock — top-right ──
+  const timeStr   = _timeString();
+  const dayStr    = `Day ${gameTime.dayNumber}`;
+  const wxIcon    = _weatherIcon(weather.getState());
+  const clockText = `${timeStr}  ${dayStr}  ${wxIcon}`;
+  ctx.font = '11px monospace';
+  const cw = ctx.measureText(clockText).width + 14;
+  ctx.fillStyle = 'rgba(0,0,0,0.60)';
+  ctx.fillRect(636 - cw, 4, cw, 16);
+  ctx.fillStyle = '#ffe880';
+  ctx.textAlign = 'right';
+  ctx.fillText(clockText, 632, 6);
+
+  // ── Tile coords / debug — below clock ──
+  const coordText = debugOverlay
+    ? `Tile: ${movement.leadX}, ${movement.leadY}  Turn: ${GameState.currentTurn}`
+    : `[F1] debug`;
+  const dbW = debugOverlay ? 260 : 90;
+  ctx.font = '10px monospace';
+  ctx.fillStyle = 'rgba(0,0,0,0.50)';
+  ctx.fillRect(636 - dbW, 24, dbW, 14);
+  ctx.fillStyle = '#aaaaaa';
+  ctx.textAlign = 'right';
+  ctx.fillText(coordText, 632, 26);
+
+  // ── Extended debug info ──
+  if (debugOverlay && mapData) {
+    const x = movement.leadX, y = movement.leadY;
+    const tile = mapData.getTile(x, y, mapData.currentFloor);
+    const obj  = mapData.getObjectAt(x, y, mapData.currentFloor);
+    ctx.fillStyle = 'rgba(0,0,0,0.70)';
+    ctx.fillRect(392, 42, 244, 100);
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ccffcc';
+    ctx.fillText(`Tile: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 45);
+    ctx.fillStyle = '#ffcccc';
+    ctx.fillText(`Passable: ${mapData.isPassable(x, y, 0)}`, 632, 58);
+    ctx.fillStyle = '#ccccff';
+    ctx.fillText(`Object: ${obj ? obj.object_id : 'none'}`, 632, 71);
+    ctx.fillStyle = '#ffffcc';
+    ctx.fillText(`Time: ${gameTime.getState()}  Turn: ${GameState.currentTurn}`, 632, 84);
+    ctx.fillStyle = '#ffccff';
+    ctx.fillText(`Weather: ${weather.getState()}`, 632, 97);
+    ctx.fillStyle = '#ccffff';
+    ctx.fillText(`Ambient: ${mapData.def.ambient_light ?? 'none'}`, 632, 110);
+    ctx.fillStyle = '#ffddaa';
+    ctx.fillText(`chest_touched: ${GameState.flags.isSet('chest_touched')}`, 632, 123);
+  }
+
+  // ── Party portrait HUD — bottom-left ──
+  const members = party.active;
+  for (let i = 0; i < Math.min(members.length, 4); i++) {
+    const char = members[i];
+    const hx = 4 + i * 74;
+    const hy = 395;
+
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = i === 0 ? '#ffffff' : '#aaaaaa';
+    ctx.fillText(char.name, hx, hy);
+
+    ctx.fillStyle = 'rgba(20,20,20,0.85)';
+    ctx.fillRect(hx, hy + 10, 64, 64);
+    ctx.strokeStyle = i === 0 ? '#88ccff' : '#555555';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(hx, hy + 10, 64, 64);
+
+    ctx.drawImage(char.getSpriteSheet(), 0, 0, 32, 32, hx + 16, hy + 18, 32, 32);
+
+    const hpPct = char.hp / char.maxHp;
+    ctx.fillStyle = '#2a1111';
+    ctx.fillRect(hx, hy + 75, 64, 5);
+    ctx.fillStyle = hpPct > 0.5 ? '#44aa44' : hpPct > 0.25 ? '#aaaa22' : '#aa2222';
+    ctx.fillRect(hx, hy + 75, Math.floor(64 * hpPct), 5);
+
+    // Torch indicator
+    if (_lightRadius(char) > 0) {
+      ctx.fillStyle = '#ffaa22';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('🔦', hx + 2, hy + 82);
+    }
+  }
+
+  // ── World log panel (L key) ──
+  if (worldLogVisible) _renderWorldLog(ctx);
+
+  // ── Dialogue layer: narration card → dialogue → journal → interaction prompt ──
+  const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
+  if (narrationCard) {
+    _renderNarrationCard(dctx, narrationCard, performance.now() - narrationCard.startMs);
+  } else if (Dialogue.isOpen()) {
+    Dialogue.update(deltaMs);
+    Dialogue.render();
+  } else if (InventoryUI.isOpen()) {
+    InventoryUI.render();
+  } else if (Journal.isOpen()) {
+    Journal.render();
+  } else {
+    // Interaction / talk prompt for the facing target
+    const npcTgt = movement?.npcInteractTarget ?? null;
+    const objTgt = movement?.interactTarget ?? null;
+    const tgt    = npcTgt || objTgt;
+    if (tgt) {
+      const screen = npcTgt
+        ? camera.worldToScreen(npcTgt.tileX, npcTgt.tileY)
+        : camera.worldToScreen(objTgt.tile_x, objTgt.tile_y);
+      const msg = npcTgt ? 'Press E to talk' : 'Press E to interact';
+      dctx.font = '10px monospace';
+      const tw = dctx.measureText(msg).width + 12;
+      const bx = screen.x + 16 - tw / 2;
+      const by = screen.y - 20;
+      dctx.fillStyle    = 'rgba(0,0,0,0.82)';
+      dctx.fillRect(bx, by, tw, 14);
+      dctx.fillStyle    = npcTgt ? '#88ffcc' : '#ffff88';
+      dctx.textAlign    = 'center';
+      dctx.textBaseline = 'top';
+      dctx.fillText(msg, screen.x + 16, by + 2);
+    }
+  }
+
+  // ── Phase 7: Toasts ──
+  Secrets.updateToast(deltaMs);
+  Factions.updateToast(deltaMs);
+  Secrets.renderToast(dctx, 8);
+  Factions.renderToast(dctx, 36);
+
+  // ── Phase 9: Lock result toast ──
+  if (lockToast) _renderLockToast(dctx, lockToast);
+}
+
+// ─── Narration card ────────────────────────────────────────────────────────────
+
+function _renderNarrationCard(ctx, card, elapsed) {
+  const alpha       = Math.min(elapsed / 300, 1.0);
+  const slideOffset = Math.round((1 - alpha) * 30);
+
+  const CW = 400, CH = 170;
+  const cx = Math.round((640 - CW) / 2);
+  const cy = Math.round((480 - CH) / 2) + slideOffset;
+
+  ctx.save();
+
+  // Dim background
+  ctx.globalAlpha = 0.72 * alpha;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, 640, 480);
+
+  // Card body
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = 'rgba(14,18,28,0.97)';
+  ctx.fillRect(cx, cy, CW, CH);
+  ctx.strokeStyle = '#556677';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx, cy, CW, CH);
+
+  // Inner top border accent
+  ctx.strokeStyle = '#33aacc';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx + 8, cy + 1);
+  ctx.lineTo(cx + CW - 8, cy + 1);
+  ctx.stroke();
+
+  ctx.textBaseline = 'top';
+  let textY = cy + 20;
+
+  if (card.title) {
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffee88';
+    ctx.fillText(card.title, cx + CW / 2, textY);
+    textY += 22;
+    // Separator
+    ctx.strokeStyle = '#334455';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + 20, textY - 4);
+    ctx.lineTo(cx + CW - 20, textY - 4);
+    ctx.stroke();
+  }
+
+  // Body text with word wrap
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#dde8ee';
+  const lines = _wrapText(ctx, card.text, CW - 48);
+  for (const line of lines) {
+    ctx.fillText(line, cx + 24, textY);
+    textY += 16;
+  }
+
+  // "Press any key" prompt
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = `rgba(102,136,153,${alpha})`;
+  ctx.fillText('— Press any key to continue —', cx + CW / 2, cy + CH - 16);
+
+  ctx.restore();
+}
+
+function _wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line    = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// ─── World log panel ──────────────────────────────────────────────────────────
+
+function _renderWorldLog(ctx) {
+  const entries = GameState.worldLog.slice(-20);
+  const PW = 310, ROW = 13;
+  const PH = Math.max(entries.length, 1) * ROW + 24;
+  const px = 4, py = 4;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  ctx.fillRect(px, py, PW, PH);
+  ctx.strokeStyle = '#334455';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px, py, PW, PH);
+
+  ctx.font = 'bold 9px monospace';
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#33aacc';
+  ctx.fillText('WORLD LOG  [L] close', px + 6, py + 5);
+
+  if (entries.length === 0) {
+    ctx.fillStyle = '#556677';
+    ctx.fillText('(empty)', px + 6, py + 18);
+  } else {
+    ctx.font = '9px monospace';
+    entries.forEach((entry, i) => {
+      const ey = py + 18 + i * ROW;
+      ctx.fillStyle = '#446688';
+      ctx.fillText(`T${entry.turn}`, px + 6, ey);
+      ctx.fillStyle = '#aabbcc';
+      ctx.fillText(entry.text, px + 42, ey);
+    });
+  }
+  ctx.restore();
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function _timeString() {
+  const h = String(gameTime.getHour()).padStart(2, '0');
+  const m = String(gameTime.getMinute()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function _weatherIcon(state) {
+  const icons = {
+    clear:      '☀',
+    overcast:   '☁',
+    rain:       '🌧',
+    heavy_rain: '⛈',
+    fog:        '🌫',
+    snow:       '🌨',
+    blizzard:   '❄',
+    storm:      '⛈',
+  };
+  return icons[state] ?? '?';
+}
+
+// ─── Lock toast renderer ──────────────────────────────────────────────────────
+
+/**
+ * Render a lock resolution toast at the bottom-centre of the screen.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{ text: string, type: string, remainMs: number }} toast
+ */
+function _renderLockToast(ctx, toast) {
+  const COLORS = {
+    success:   { bg: '#1a3a1a', border: '#44bb44', text: '#aaffaa' },
+    neutral:   { bg: '#2a2a1a', border: '#bbbb44', text: '#ffffaa' },
+    failure:   { bg: '#3a1a1a', border: '#bb4444', text: '#ffaaaa' },
+    hard_fail: { bg: '#2a1a2a', border: '#aa44aa', text: '#ffaaff' },
+  };
+  const scheme = COLORS[toast.type] ?? COLORS.neutral;
+
+  ctx.save();
+  ctx.font = '11px monospace';
+
+  const maxWidth = 480;
+  const lines    = _wrapText(ctx, toast.text, maxWidth);
+  const PW       = maxWidth + 24;
+  const PH       = lines.length * 15 + 16;
+  const px       = Math.round((640 - PW) / 2);
+  const py       = 340;
+
+  // Fade out in last 600 ms
+  const alpha = toast.remainMs < 600 ? (toast.remainMs / 600) : 1.0;
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle = scheme.bg;
+  ctx.fillRect(px, py, PW, PH);
+  ctx.strokeStyle = scheme.border;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px, py, PW, PH);
+
+  ctx.fillStyle   = scheme.text;
+  ctx.textAlign   = 'left';
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => ctx.fillText(line, px + 12, py + 8 + i * 15));
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ─── Launch ───────────────────────────────────────────────────────────────────
+
+init().catch(err => {
+  console.error('Engine init failed:', err);
+  document.body.style.color = '#f66';
+  document.body.style.fontFamily = 'monospace';
+  document.body.style.padding = '20px';
+  document.body.textContent = 'Engine error: ' + err.message;
+});
+</script>
+</body>
+</html>

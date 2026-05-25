@@ -1,0 +1,28 @@
+{
+  "character_id": "char_cleric_mira",
+  "display_name": "Mira",
+  "class_id": "cleric",
+  "sprite_sheet": "procedural",
+  "portrait": "procedural",
+  "base_stats": {
+    "hp": 28,
+    "max_hp": 28,
+    "speed": 5,
+    "attack": 5,
+    "defense": 5,
+    "magic": 6
+  },
+  "stat_bonuses": {},
+  "abilities_unlocked": [],
+  "equipment": {
+    "weapon": null,
+    "off_hand": null,
+    "armor": null,
+    "helm": null,
+    "accessory_1": null,
+    "accessory_2": null
+  },
+  "status_effects": [],
+  "use_tracked_skills": {},
+  "position": { "map_id": "test_town", "tile_x": 20, "tile_y": 23, "floor": 0 }
+}
