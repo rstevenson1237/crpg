@@ -2416,6 +2416,25 @@
   ],
   "objects": [
     {
+      "object_id": "obj_loot_chest_01",
+      "object_type": "chest",
+      "tile_x": 10,
+      "tile_y": 8,
+      "floor": 0,
+      "facing": null,
+      "sprite": "obj_chest_closed",
+      "passable": false,
+      "interactable": true,
+      "interaction_type": "open_chest",
+      "state": "closed",
+      "loot_table_id": "loot_table_test_chest",
+      "requires_class": null,
+      "requires_item": null,
+      "requires_secret": null,
+      "on_interact_event": "evt_open_loot_chest",
+      "on_open_event": null
+    },
+    {
       "object_id": "obj_hidden_cellar_door",
       "object_type": "hidden_passage",
       "tile_x": 8,

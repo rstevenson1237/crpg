@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 7</title>
+  <title>CRPG Engine — Phase 8</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -34,6 +34,10 @@ import { Dialogue }             from './engine/dialogue.js';
 import { Secrets }              from './engine/secrets.js';
 import { Factions }             from './engine/factions.js';
 import { Journal }              from './ui/journal.js';
+import { Items, LootTables }    from './engine/items.js';
+import { Inventory }            from './engine/inventory.js';
+import { Equipment }            from './engine/equipment.js';
+import { InventoryUI }          from './ui/inventory_ui.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -96,6 +100,51 @@ async function init() {
   ]);
   Secrets.load(secretsData);
   Factions.load(factionsData);
+
+  // ── Phase 8: Items, Inventory, Equipment ──
+  const [itemsData, lootTablesData] = await Promise.all([
+    fetch('/data/items/test_items.json').then(r => r.json()),
+    fetch('/data/items/loot_tables.json').then(r => r.json()),
+  ]);
+  Items.loadRegistry(itemsData);
+  LootTables.load(lootTablesData);
+
+  // Wire inventory handlers so events can grant/remove items
+  Inventory.setHandlers({
+    onGrantSecret: id  => Secrets.grant(id),
+    onFireEvent:   id  => Events.fireActionTrigger('manual_event', { event_id: id }),
+    onShowMsg:     msg => console.log('[Inventory]', msg),
+  });
+
+  // Wire equipment handlers for on-equip effects
+  Equipment.setHandlers({
+    onFireEvent:   id              => Events.fireActionTrigger('manual_event', { event_id: id }),
+    onGrantSecret: id              => Secrets.grant(id),
+    onGrantSkill:  (charId, skill) => console.log(`[Equipment] Skill unlocked: ${skill} for ${charId}`),
+    getParty:      ()              => party,
+  });
+
+  // Wire event engine's inventory actions
+  Events.setInventoryHandlers(
+    (itemId, qty) => Inventory.add(itemId, qty),
+    (itemId, qty) => Inventory.remove(itemId, qty),
+    (tableId)     => LootTables.roll(tableId),
+  );
+
+  // Initialise InventoryUI
+  InventoryUI.init(renderer, input);
+
+  // Add window reference for console access
+  window.GameState = GameState;
+
+  // Bootstrap starting equipment from character definitions
+  // Characters start with items already equipped (not from inventory)
+  for (const char of party.active) {
+    Equipment.initFromCharDef(char.id, char.def);
+  }
+
+  // Add starting torch to inventory (so the party has one to use/transfer)
+  Inventory.add('item_torch', 1);
 
   Events.setSecretHandlers(
     id         => Secrets.grant(id),
@@ -211,6 +260,15 @@ async function init() {
       return;  // block movement while journal is open
     }
 
+    // ── Phase 8: Inventory input handling ──
+    if (InventoryUI.isOpen()) {
+      if (input.wasKeyPressed('Escape') || input.wasKeyPressed('KeyI')) {
+        InventoryUI.handleKey('Escape');
+      }
+      input.clearFrameState();
+      return;  // block movement while inventory is open
+    }
+
     const prevTurn = GameState.currentTurn;
     movement.tick(deltaMs);
     const movementDelta = GameState.currentTurn - prevTurn;
@@ -229,6 +287,9 @@ async function init() {
 
     // J — toggle journal
     if (input.wasKeyPressed('KeyJ')) Journal.toggle();
+
+    // I — toggle inventory
+    if (input.wasKeyPressed('KeyI')) InventoryUI.toggle();
 
     // F — spatial secret search around player
     if (input.wasKeyPressed('KeyF')) Secrets.search(mapData, movement.leadX, movement.leadY);
@@ -334,6 +395,11 @@ function _buildLightSources() {
 }
 
 function _lightRadius(char) {
+  // Phase 8: check Equipment module first
+  const { radius } = Equipment.getLightRadius(char.id);
+  if (radius > 0) return radius;
+
+  // Fallback: check character def's equipment field (for backward compat)
   const eq = char.def.equipment;
   if (!eq) return 0;
   for (const v of Object.values(eq)) {
@@ -449,6 +515,8 @@ function renderUI(deltaMs = 0) {
   } else if (Dialogue.isOpen()) {
     Dialogue.update(deltaMs);
     Dialogue.render();
+  } else if (InventoryUI.isOpen()) {
+    InventoryUI.render();
   } else if (Journal.isOpen()) {
     Journal.render();
   } else {
