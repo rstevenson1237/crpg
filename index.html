@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 8</title>
+  <title>CRPG Engine — Phase 9</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -38,6 +38,9 @@ import { Items, LootTables }    from './engine/items.js';
 import { Inventory }            from './engine/inventory.js';
 import { Equipment }            from './engine/equipment.js';
 import { InventoryUI }          from './ui/inventory_ui.js';
+import { Classes }              from './engine/classes.js';
+import { Abilities }            from './engine/abilities.js';
+import { Lock }                 from './engine/locks.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -70,25 +73,48 @@ let screenFade    = null;  // { direction, color, durationMs, startMs, onDone }
 // ─── Phase 6: Dialogue ────────────────────────────────────────────────────────
 // Dialogue and Journal are managed by their modules. isOpen() checked in tick loop.
 
+// ─── Phase 9: Lock resolution toast ──────────────────────────────────────────
+// { type: "success"|"failure"|"hard_fail", text: string, remainMs: number }
+let lockToast = null;
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
   mapData     = await loadMap('/data/maps/test_town.json');
   mapRenderer = new MapRenderer(renderer, camera);
   lighting.setMapData(mapData);
 
-  const [aldricDef, lyriaDef] = await Promise.all([
+  const [aldricDef, lyriaDef, kaelDef, miraDef] = await Promise.all([
     fetch('/data/characters/char_fighter_aldric.json').then(r => r.json()),
     fetch('/data/characters/char_mage_lyria.json').then(r => r.json()),
+    fetch('/data/characters/char_thief_kael.json').then(r => r.json()),
+    fetch('/data/characters/char_cleric_mira.json').then(r => r.json()),
   ]);
 
   const aldric = new Character(aldricDef);
   const lyria  = new Character(lyriaDef);
+  const kael   = new Character(kaelDef);
+  const mira   = new Character(miraDef);
 
   party = new Party();
   GameState.party = party;
-  party.setMax(2);
+  party.setMax(4);
   party.addMember(aldric);
   party.addMember(lyria);
+  party.addMember(kael);
+  party.addMember(mira);
+
+  // ── Phase 9: Classes, Abilities ──
+  const [classesData, abilitiesData] = await Promise.all([
+    fetch('/data/classes/core_classes.json').then(r => r.json()),
+    fetch('/data/abilities/core_abilities.json').then(r => r.json()),
+  ]);
+  Classes.load(classesData);
+  Abilities.loadRegistry(abilitiesData);
+
+  // Make globals accessible for console testing
+  window.Classes   = Classes;
+  window.Abilities = Abilities;
+  window.Lock      = Lock;
 
   movement = new MovementController(input, mapData, party, camera, GameState);
   movement.setLeadPosition(aldricDef.position.tile_x, aldricDef.position.tile_y);
@@ -135,7 +161,8 @@ async function init() {
   InventoryUI.init(renderer, input);
 
   // Add window reference for console access
-  window.GameState = GameState;
+  window.GameState  = GameState;
+  window.Party      = party;
 
   // Bootstrap starting equipment from character definitions
   // Characters start with items already equipped (not from inventory)
@@ -187,9 +214,13 @@ async function init() {
     (npcId) => NPCs.despawn(npcId)
   );
 
-  // ── Phase 5: Event wiring ──
+  // ── Phase 9: Lock-aware interaction handler ──
   movement.setOnInteract((obj) => {
-    Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+    if (obj.interaction_type && obj.lock_type) {
+      _resolveLockInteraction(obj);
+    } else {
+      Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+    }
   });
 
   movement.setOnMove((x, y) => {
@@ -267,6 +298,12 @@ async function init() {
       }
       input.clearFrameState();
       return;  // block movement while inventory is open
+    }
+
+    // Decay lock toast
+    if (lockToast) {
+      lockToast.remainMs -= deltaMs;
+      if (lockToast.remainMs <= 0) lockToast = null;
     }
 
     const prevTurn = GameState.currentTurn;
@@ -367,13 +404,88 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 7 — Secrets, Factions & Journal loaded.');
+  console.log('Phase 9 — Classes, Abilities & Lock System loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
-  console.log('  J = journal (Secrets / Factions / World Log / Party tabs)');
-  console.log('  F = search nearby for hidden secrets  (try tile 8,8 for the hidden cellar)');
-  console.log('  Walk to Elder Maris at tile (15,10) and press E to talk.');
-  console.log('  In console: Secrets.grant("secret_warden_letter") unlocks secret dialogue option.');
-  console.log('  In console: Factions.modify("faction_town_guard", 20) raises guard standing.');
+  console.log('  J = journal  |  I = inventory  |  F = search hidden');
+  console.log('');
+  console.log('  Phase 9 test objects:');
+  console.log('  (23,14) Locked door      — lockpick hard lock   — Thief only');
+  console.log('  (28,10) Glyph inscription — glyph_reading hard  — Mage only');
+  console.log('  (5,22)  Heavy barricade  — breach soft lock     — Fighter advantage (70% fail others)');
+  console.log('  (15,22) Suspicious barrel — search_hidden soft  — Thief finds secret');
+  console.log('');
+  console.log('  Console shortcuts:');
+  console.log('  Classes.get("fighter")  → class definition');
+  console.log('  Lock.resolve("lockpick","hard",[{class_id:"thief"}])  → test resolver');
+  console.log('  Party.setMax(1)  → solo party for hard-lock testing');
+  console.log('  Party.setLead("char_thief_kael")  → switch to Thief lead');
+  console.log('  GameState.party.members[0].use_tracked_skills  → check use counts');
+}
+
+// ─── Phase 9: Lock interaction resolution ────────────────────────────────────
+
+/**
+ * Resolve a lock-gated object interaction, show appropriate UI feedback,
+ * execute inline actions, track ability use, and fire result events.
+ * @param {object} obj  — map object definition
+ */
+function _resolveLockInteraction(obj) {
+  const result = Lock.resolve(
+    obj.interaction_type,
+    obj.lock_type,
+    party.active,
+    obj.soft_outcomes ?? null,
+  );
+
+  console.log(`[Lock] ${obj.object_id} (${obj.interaction_type}/${obj.lock_type}) → ${result.outcome}`);
+
+  // ── UI feedback ──
+  if (!result.success) {
+    if (result.outcome === 'hard_lock_fail') {
+      const classes = result.required_classes?.map(c => c.class_label).join(' or ') ?? 'a specialist';
+      _showLockToast(`Requires ${classes} — ${result.description}`, 'hard_fail', 3500);
+    } else {
+      _showLockToast(result.description, 'failure', 2500);
+    }
+    // Fire on_fail_event if defined
+    if (obj.on_fail_event) Events.fireEvent(obj.on_fail_event);
+    return;
+  }
+
+  // Success feedback by outcome type
+  if (result.outcome === 'class_advantage') {
+    _showLockToast(result.description, 'success', 2200);
+  } else if (result.outcome === 'class_disadvantage_success') {
+    _showLockToast(result.description, 'success', 2200);
+  } else if (result.outcome === 'no_class_success') {
+    _showLockToast(`You manage it, but awkwardly. ${result.description}`, 'neutral', 2500);
+  }
+
+  // Execute inline action from soft_outcomes (e.g. modify_map_object, grant_secret)
+  if (result.action) {
+    Events.executeAction(result.action);
+  }
+
+  // Track ability use on the acting character
+  if (result.ability_id && result.acting_char_def) {
+    Abilities.recordUse(result.acting_char_def, result.ability_id);
+  }
+
+  // Fire the success event
+  if (obj.on_interact_event) Events.fireEvent(obj.on_interact_event);
+
+  // Also fire generic object_interacted for any event listeners watching this object
+  Events.fireActionTrigger('object_interacted', { object_id: obj.object_id });
+}
+
+/**
+ * Show a lock resolution toast with colour-coded feedback.
+ * @param {string} text
+ * @param {"success"|"neutral"|"failure"|"hard_fail"} type
+ * @param {number} durationMs
+ */
+function _showLockToast(text, type, durationMs) {
+  lockToast = { text, type, remainMs: durationMs };
 }
 
 // ─── Build light sources from party equipment ─────────────────────────────────
@@ -542,11 +654,14 @@ function renderUI(deltaMs = 0) {
     }
   }
 
-  // ── Phase 7: Toasts (always render, above everything) ──
+  // ── Phase 7: Toasts ──
   Secrets.updateToast(deltaMs);
   Factions.updateToast(deltaMs);
   Secrets.renderToast(dctx, 8);
   Factions.renderToast(dctx, 36);
+
+  // ── Phase 9: Lock result toast ──
+  if (lockToast) _renderLockToast(dctx, lockToast);
 }
 
 // ─── Narration card ────────────────────────────────────────────────────────────
@@ -693,6 +808,51 @@ function _weatherIcon(state) {
     storm:      '⛈',
   };
   return icons[state] ?? '?';
+}
+
+// ─── Lock toast renderer ──────────────────────────────────────────────────────
+
+/**
+ * Render a lock resolution toast at the bottom-centre of the screen.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{ text: string, type: string, remainMs: number }} toast
+ */
+function _renderLockToast(ctx, toast) {
+  const COLORS = {
+    success:   { bg: '#1a3a1a', border: '#44bb44', text: '#aaffaa' },
+    neutral:   { bg: '#2a2a1a', border: '#bbbb44', text: '#ffffaa' },
+    failure:   { bg: '#3a1a1a', border: '#bb4444', text: '#ffaaaa' },
+    hard_fail: { bg: '#2a1a2a', border: '#aa44aa', text: '#ffaaff' },
+  };
+  const scheme = COLORS[toast.type] ?? COLORS.neutral;
+
+  ctx.save();
+  ctx.font = '11px monospace';
+
+  const maxWidth = 480;
+  const lines    = _wrapText(ctx, toast.text, maxWidth);
+  const PW       = maxWidth + 24;
+  const PH       = lines.length * 15 + 16;
+  const px       = Math.round((640 - PW) / 2);
+  const py       = 340;
+
+  // Fade out in last 600 ms
+  const alpha = toast.remainMs < 600 ? (toast.remainMs / 600) : 1.0;
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle = scheme.bg;
+  ctx.fillRect(px, py, PW, PH);
+  ctx.strokeStyle = scheme.border;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px, py, PW, PH);
+
+  ctx.fillStyle   = scheme.text;
+  ctx.textAlign   = 'left';
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => ctx.fillText(line, px + 12, py + 8 + i * 15));
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 // ─── Launch ───────────────────────────────────────────────────────────────────
