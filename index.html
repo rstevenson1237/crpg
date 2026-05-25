@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 11</title>
+  <title>CRPG Engine — Phase 12</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -42,6 +42,8 @@ import { Classes }              from './engine/classes.js';
 import { Abilities }            from './engine/abilities.js';
 import { Lock }                 from './engine/locks.js';
 import { CombatEngine }         from './engine/combat.js';
+import { Progression }          from './engine/progression.js';
+import { TrainingUI }           from './ui/training_ui.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -169,6 +171,27 @@ async function init() {
   const combat = new CombatEngine(renderer, input);
   window.Combat = combat;
 
+  // ── Phase 12: Progression ──
+  TrainingUI.init(renderer, input);
+  const mentorsData = await fetch('/data/progression/mentors.json').then(r => r.json());
+  Progression.loadMentors(mentorsData);
+  Progression.setEventFireHandler(eventId => Events.fireEvent(eventId));
+  Progression.setNotificationHandler((title, text, onDismiss) => {
+    narrationCard = { title, text, onDismiss: onDismiss ?? (() => {}), startMs: performance.now() };
+  });
+  Progression.setWorldLogHandler(text => {
+    GameState.worldLog.push({ turn: GameState.currentTurn, text });
+  });
+  Events.setProgressionHandler((characterDef, abilityId) => {
+    Progression.grantSkillUnlock(characterDef, abilityId);
+  });
+  Dialogue.setMentorTrainingHandler(mentorId => {
+    Dialogue.close();
+    TrainingUI.open(mentorId, party, Inventory, Factions, () => {});
+  });
+  window.Progression = Progression;
+  window.TrainingUI  = TrainingUI;
+
   // Bootstrap starting equipment from character definitions
   // Characters start with items already equipped (not from inventory)
   for (const char of party.active) {
@@ -294,6 +317,15 @@ async function init() {
       }
       input.clearFrameState();
       return;  // block movement while journal is open
+    }
+
+    // ── Phase 12: Training UI input handling ──
+    if (TrainingUI.isOpen()) {
+      for (const code of ['Escape','ArrowLeft','ArrowRight']) {
+        if (input.wasKeyPressed(code)) TrainingUI.handleKey(code);
+      }
+      input.clearFrameState();
+      return;
     }
 
     // ── Phase 8: Inventory input handling ──
@@ -455,10 +487,16 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 11 — Combat Resolution loaded.');
+  console.log('Phase 12 — Progression System loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
   console.log('  J = journal  |  I = inventory  |  F = search hidden');
-  console.log('  C = trigger test combat (Fighter vs 2 Skeletons)');
+  console.log('  C = trigger test combat (4 party vs 3 skeletons)');
+  console.log('');
+  console.log('  Phase 12 test — Progression:');
+  console.log('  Talk to Elder Maris (15,10) → "Could you teach me something?" → training UI');
+  console.log('  Factions.modify("faction_town_guard", 20) → standing 70 → guard captain spawns');
+  console.log('  Progression.recordUse(party.active[1].def,"arcane_bolt") x10 → magic +1');
+  console.log('  Progression.recordUse(party.active[2].def,"lockpick") x5 → speed +1');
   console.log('');
   console.log('  Phase 9 test objects:');
   console.log('  (23,14) Locked door      — lockpick hard lock   — Thief only');
@@ -518,9 +556,9 @@ function _resolveLockInteraction(obj) {
     Events.executeAction(result.action);
   }
 
-  // Track ability use on the acting character
+  // Track ability use on the acting character (with progression milestone check)
   if (result.ability_id && result.acting_char_def) {
-    Abilities.recordUse(result.acting_char_def, result.ability_id);
+    Progression.recordUse(result.acting_char_def, result.ability_id);
   }
 
   // Fire the success event
@@ -676,6 +714,8 @@ function renderUI(deltaMs = 0) {
   const dctx = renderer.getLayerContext(LAYER.DIALOGUE);
   if (narrationCard) {
     _renderNarrationCard(dctx, narrationCard, performance.now() - narrationCard.startMs);
+  } else if (TrainingUI.isOpen()) {
+    TrainingUI.render(deltaMs);
   } else if (Dialogue.isOpen()) {
     Dialogue.update(deltaMs);
     Dialogue.render();

@@ -8,7 +8,8 @@
  * Exposed as window.Factions for console testing.
  */
 
-import { GameState } from './gamestate.js';
+import { GameState }  from './gamestate.js';
+import { Progression } from './progression.js';
 
 // Thresholds are inclusive lower bounds, ordered high→low
 const STANDING_LABELS = [
@@ -33,6 +34,10 @@ export const Factions = {
       _defs.set(f.faction_id, f);
       if (!GameState.factions.has(f.faction_id)) {
         GameState.factions.set(f.faction_id, f.default_standing ?? 50);
+      }
+      // Register reputation unlock triggers
+      for (const ru of (f.reputation_unlocks ?? [])) {
+        Progression.registerFactionUnlock(f.faction_id, ru.threshold, ru.fires_event);
       }
     }
     console.log(`[Factions] Loaded ${arr.length} faction(s).`);
@@ -77,6 +82,9 @@ export const Factions = {
         remainMs: TOAST_DURATION_MS,
         color,
       };
+
+      // Check reputation-gated progression unlocks
+      if (actual > 0) Progression.checkFactionUnlocks(factionId, next);
 
       // Apply conflict penalties to rival factions
       for (const conflictId of (def?.conflicts_with ?? [])) {

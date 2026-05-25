@@ -1,0 +1,30 @@
+{
+  "dialogue_id": "npc_guard_captain_harwick",
+  "nodes": [
+    {
+      "node_id": "dlg_harwick_root",
+      "speaker_id": "npc_guard_captain_harwick",
+      "speaker_portrait": null,
+      "text": "I've been watching your work. The Guard doesn't forget those who help keep order. I can offer you some training — practical knowledge earned from years of service.",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "I'd like to train with you.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": { "type": "open_mentor_training", "mentor_id": "mentor_guard_captain_harwick" }
+        },
+        {
+          "option_text": "Not right now.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    }
+  ]
+}

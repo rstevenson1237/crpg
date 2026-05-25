@@ -1,0 +1,32 @@
+[
+  {
+    "mentor_id": "mentor_blacksmith_aldric",
+    "mentor_label": "Aldric (Elder / Blacksmith)",
+    "npc_id": "npc_town_elder",
+    "available_condition": { "condition_type": "flag_not_set", "flag_id": "flag_elder_training_dismissed" },
+    "trainings": [
+      {
+        "training_id": "training_heavy_strike",
+        "training_label": "Heavy Strike",
+        "training_description": "A powerful overhead blow dealing +50% melee damage on the next attack.",
+        "target_class": "fighter",
+        "ability_granted": "heavy_strike",
+        "cost_items": [{ "item_id": "item_iron_sword", "quantity": 1 }],
+        "cost_faction_standing": null,
+        "prerequisite_abilities": ["cleave"],
+        "one_time": true
+      },
+      {
+        "training_id": "training_fortified_stance",
+        "training_label": "Fortified Stance",
+        "training_description": "A defensive posture granting +1 Defense that persists while in combat.",
+        "target_class": null,
+        "ability_granted": "fortified_stance",
+        "cost_items": [],
+        "cost_faction_standing": { "faction_id": "faction_town_guard", "minimum": 60 },
+        "prerequisite_abilities": [],
+        "one_time": true
+      }
+    ]
+  }
+]

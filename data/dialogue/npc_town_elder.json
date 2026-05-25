@@ -17,7 +17,40 @@
           "action": null
         },
         {
+          "option_text": "Could you teach me something?",
+          "target_node": "dlg_elder_training",
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        },
+        {
           "option_text": "Farewell.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": null
+        }
+      ]
+    },
+    {
+      "node_id": "dlg_elder_training",
+      "speaker_id": "npc_town_elder",
+      "speaker_portrait": null,
+      "text": "I have spent many years in both study and service. Yes, I can share what I know with those willing to learn. What would you like to study?",
+      "on_enter_fire_event": null,
+      "options": [
+        {
+          "option_text": "Show me your training.",
+          "target_node": null,
+          "visible_condition": null,
+          "enabled_condition": null,
+          "on_select_fire_event": null,
+          "action": { "type": "open_mentor_training", "mentor_id": "mentor_blacksmith_aldric" }
+        },
+        {
+          "option_text": "Never mind.",
           "target_node": null,
           "visible_condition": null,
           "enabled_condition": null,

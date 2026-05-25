@@ -22,5 +22,22 @@
       }
     ],
     "tags": ["quest_giver", "elder"]
+  },
+  {
+    "npc_id": "npc_guard_captain_harwick",
+    "display_name": "Captain Harwick",
+    "class_id": "fighter",
+    "sprite_sheet": null,
+    "portrait": null,
+    "faction_id": "faction_town_guard",
+    "dialogue_root": "dlg_harwick_root",
+    "map_id": "test_town",
+    "tile_x": 25,
+    "tile_y": 8,
+    "floor": 0,
+    "facing": "south",
+    "schedule": [],
+    "tags": ["guard", "mentor"],
+    "initially_hidden": true
   }
 ]

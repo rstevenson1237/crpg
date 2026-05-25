@@ -4,7 +4,10 @@
     "display_name": "Town Guard",
     "default_standing": 50,
     "conflicts_with": ["faction_thieves_guild"],
-    "description": "The local militia who maintain order in the town and surrounding roads."
+    "description": "The local militia who maintain order in the town and surrounding roads.",
+    "reputation_unlocks": [
+      { "threshold": 70, "fires_event": "evt_guard_captain_mentor_unlocked" }
+    ]
   },
   {
     "faction_id": "faction_thieves_guild",

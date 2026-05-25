@@ -40,8 +40,10 @@ let _node     = null;          // current node
 let _charMs   = 0;
 let _shown    = 0;             // chars visible so far (typewriter)
 let _done     = false;         // typewriter complete
-let _opts     = [];            // filtered options: [{text, target, enabled, eventId}]
+let _opts     = [];            // filtered options: [{text, target, enabled, eventId, action}]
 let _mouseX   = 0, _mouseY = 0;
+
+let _mentorTrainingHandler = null;  // (mentorId) => void — Phase 12
 
 // Per-NPC visited-node history (persists across open/close within a session)
 const _history = new Map();   // npc_id → Set<node_id>
@@ -55,6 +57,9 @@ export const Dialogue = {
    * @param {import('./renderer.js').Renderer} renderer
    * @param {import('./input.js').Input} input
    */
+  /** Register a handler called when a dialogue option has action.type === "open_mentor_training". */
+  setMentorTrainingHandler(fn) { _mentorTrainingHandler = fn; },
+
   init(renderer, input) {
     _renderer = renderer;
     _input    = input;
@@ -298,6 +303,7 @@ function _gotoNode(nodeId) {
       target:  o.target_node,
       enabled: _evalCond(o.enabled_condition ?? null),
       eventId: o.on_select_fire_event ?? null,
+      action:  o.action ?? null,
     }));
 }
 
@@ -307,6 +313,13 @@ function _selectOption(idx) {
   if (!opt.enabled) return;
 
   if (opt.eventId) Events.fireEvent(opt.eventId);
+
+  // Dispatch inline action (e.g. open_mentor_training)
+  if (opt.action) {
+    if (opt.action.type === 'open_mentor_training' && _mentorTrainingHandler) {
+      _mentorTrainingHandler(opt.action.mentor_id);
+    }
+  }
 
   if (opt.target === null) {
     Dialogue.close();

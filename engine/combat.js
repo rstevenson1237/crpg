@@ -13,6 +13,7 @@ import { Abilities } from './abilities.js';
 import { Classes } from './classes.js';
 import { Items, LootTables } from './items.js';
 import { Inventory } from './inventory.js';
+import { Progression } from './progression.js';
 
 // Placeholder colour per class (used when sprites are absent)
 const CLASS_COLORS = {
@@ -374,9 +375,9 @@ export class CombatEngine {
       caster.current_mp = Math.max(0, caster.current_mp - ability.cost.amount);
     }
 
-    // Track usage
+    // Track usage and check milestones
     const def = caster.entity?.def ?? caster.entity;
-    Abilities.recordUse(def, ability.ability_id);
+    Progression.recordUse(def, ability.ability_id);
 
     const id = ability.ability_id;
 

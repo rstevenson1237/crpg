@@ -24,6 +24,7 @@ let _factionHandler     = null;  // (factionId, delta) => void
 let _inventoryAddHandler    = null;  // (itemId, qty) => void
 let _inventoryRemoveHandler = null;  // (itemId, qty) => boolean
 let _lootTableRollHandler   = null;  // (tableId) => [{item_id, quantity}]
+let _progressionHandler     = null;  // (characterDef, abilityId) => void — Phase 12
 let _mapDataRef  = null;
 let _gameTimeRef = null;
 let _weatherRef  = null;
@@ -61,6 +62,7 @@ export const Events = {
     _inventoryRemoveHandler = removeFn;
     _lootTableRollHandler   = rollFn;
   },
+  setProgressionHandler(fn) { _progressionHandler = fn; },
   setMapData(md)   { _mapDataRef  = md; },
   setGameTime(gt)  { _gameTimeRef = gt; },
   setWeather(w)    { _weatherRef  = w; },
@@ -452,9 +454,20 @@ function _executeAction(action, next) {
       next(); break;
     }
 
+    case 'grant_skill_unlock': {
+      const member = gs.party?.active?.find(m => m.id === action.character_id);
+      const def    = member?.def ?? null;
+      if (def && _progressionHandler) {
+        _progressionHandler(def, action.ability_id);
+      } else {
+        console.log(`[Events] grant_skill_unlock stub: char=${action.character_id} ability=${action.ability_id}`);
+      }
+      next(); break;
+    }
+
     case 'add_party_member': case 'remove_party_member':
     case 'lock_party_member': case 'unlock_party_member':
-    case 'grant_skill_unlock': case 'modify_npc_schedule':
+    case 'modify_npc_schedule':
     case 'trigger_encounter':
     case 'teleport_party': case 'grant_mentor_training':
     case 'set_music_mood':

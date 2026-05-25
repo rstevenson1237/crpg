@@ -138,6 +138,10 @@
     "combat_only": true,
     "world_only": false,
     "use_tracked": true,
+    "use_milestones": [
+      { "uses": 10, "reward_type": "stat_bonus",   "reward": { "stat": "magic", "amount": 1 }, "label": "Arcane Bolt Proficiency: Magic +1" },
+      { "uses": 30, "reward_type": "ability_upgrade", "reward": { "upgrade_id": "arcane_bolt_ii", "replaces_ability": "arcane_bolt" }, "label": "Arcane Bolt II Unlocked" }
+    ],
     "unlock_condition": null
   },
   {
@@ -311,6 +315,10 @@
     "combat_only": false,
     "world_only": true,
     "use_tracked": true,
+    "use_milestones": [
+      { "uses": 5,  "reward_type": "stat_bonus",   "reward": { "stat": "speed", "amount": 1 }, "label": "Lockpick Proficiency: Speed +1" },
+      { "uses": 15, "reward_type": "skill_unlock",  "reward": { "ability_id": "lockpick_master" }, "label": "Lockpick Master Unlocked" }
+    ],
     "unlock_condition": null
   },
   {
@@ -516,6 +524,78 @@
     "area_radius": null,
     "effects": [
       { "effect_type": "apply_status", "status_id": "sanctuary", "duration_turns": 99, "chance": 1.0 }
+    ],
+    "world_interaction_type": null,
+    "combat_only": true,
+    "world_only": false,
+    "use_tracked": false,
+    "unlock_condition": null
+  },
+  {
+    "ability_id": "lockpick_master",
+    "ability_label": "Lockpick (Master)",
+    "ability_description": "Mastery of lock mechanisms. Can now attempt master-craft locks as a soft lock instead of a hard lock.",
+    "ability_type": "interaction",
+    "cost": { "type": "none", "amount": 0 },
+    "target": "facing_tile",
+    "range_tiles": 1,
+    "area_radius": null,
+    "effects": [
+      { "effect_type": "modify_map_object", "object_id": "target", "new_state": "open" }
+    ],
+    "world_interaction_type": "lockpick_master",
+    "combat_only": false,
+    "world_only": true,
+    "use_tracked": false,
+    "unlock_condition": null
+  },
+  {
+    "ability_id": "arcane_bolt_ii",
+    "ability_label": "Arcane Bolt II",
+    "ability_description": "Enhanced arcane bolt dealing increased magic damage and piercing magical resistance.",
+    "ability_type": "standard_action",
+    "cost": { "type": "mp", "amount": 3 },
+    "target": "single_enemy",
+    "range_tiles": 7,
+    "area_radius": null,
+    "effects": [
+      { "effect_type": "deal_damage", "formula": "magic - defense", "value": 2, "damage_type": "magical" }
+    ],
+    "world_interaction_type": null,
+    "combat_only": true,
+    "world_only": false,
+    "use_tracked": true,
+    "unlock_condition": null
+  },
+  {
+    "ability_id": "heavy_strike",
+    "ability_label": "Heavy Strike",
+    "ability_description": "A powerful overhead blow. Deals +50% melee damage on the next attack.",
+    "ability_type": "standard_action",
+    "cost": { "type": "mp", "amount": 2 },
+    "target": "single_enemy",
+    "range_tiles": 1,
+    "area_radius": null,
+    "effects": [
+      { "effect_type": "deal_damage", "formula": "attack - defense", "value": 0, "damage_type": "physical" }
+    ],
+    "world_interaction_type": null,
+    "combat_only": true,
+    "world_only": false,
+    "use_tracked": true,
+    "unlock_condition": null
+  },
+  {
+    "ability_id": "fortified_stance",
+    "ability_label": "Fortified Stance",
+    "ability_description": "A defensive posture granting +1 Defense while in combat.",
+    "ability_type": "stance",
+    "cost": { "type": "none", "amount": 0 },
+    "target": "self",
+    "range_tiles": 0,
+    "area_radius": null,
+    "effects": [
+      { "effect_type": "apply_status", "status_id": "fortified", "duration_turns": 99, "chance": 1.0 }
     ],
     "world_interaction_type": null,
     "combat_only": true,

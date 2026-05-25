@@ -141,10 +141,12 @@ export const NPCs = {
     console.log(`[NPCs] Spawned ${npcId} at (${merged.tile_x},${merged.tile_y}) on ${merged.map_id}.`);
   },
 
-  /** Spawn all registered NPCs whose map_id matches the given map. */
+  /** Spawn all registered NPCs whose map_id matches the given map. Skips initially_hidden ones. */
   spawnForMap(mapId) {
     for (const [id, def] of _defs) {
-      if (def.map_id === mapId) this.spawn(id, mapId, def.tile_x, def.tile_y);
+      if (def.map_id === mapId && !def.initially_hidden) {
+        this.spawn(id, mapId, def.tile_x, def.tile_y);
+      }
     }
   },
 

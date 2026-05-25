@@ -279,6 +279,31 @@
     "priority": 0
   },
   {
+    "event_id": "evt_guard_captain_mentor_unlocked",
+    "event_label": "Guard Captain Mentor Available",
+    "trigger": {
+      "type": "none"
+    },
+    "conditions": [],
+    "condition_join": "and",
+    "actions": [
+      {
+        "type": "spawn_npc",
+        "npc_id": "npc_guard_captain_harwick",
+        "map_id": "test_town",
+        "tile_x": 25,
+        "tile_y": 8
+      },
+      {
+        "type": "add_world_log_entry",
+        "text": "Captain Harwick has taken notice of your service to the Guard."
+      }
+    ],
+    "repeat": false,
+    "on_complete_fire_event": null,
+    "priority": 0
+  },
+  {
     "event_id": "evt_barricade_held",
     "event_label": "Barricade Held",
     "trigger": {
