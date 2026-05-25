@@ -393,6 +393,9 @@ async function init() {
       return;
     }
 
+    // Clear layer 8 (EFFECTS) — combat grid/highlights write here; overworld has nothing to draw
+    renderer.clearLayer(LAYER.EFFECTS);
+
     // Render map layers 0–5
     mapRenderer.render(mapData, movement.leadX, movement.leadY);
 
