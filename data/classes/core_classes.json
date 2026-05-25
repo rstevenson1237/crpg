@@ -1,0 +1,111 @@
+[
+  {
+    "class_id": "fighter",
+    "class_label": "Fighter",
+    "class_description": "Front-line warrior with physical authority. Melee dominance, space control, and endurance that outlasts everything the world throws at them.",
+    "combat_archetype": "front_line_tank",
+    "base_stats": { "hp": 35, "speed": 5, "attack": 7, "defense": 6, "magic": 1 },
+    "equipment_restrictions": {
+      "weapon": ["weapon_sword", "weapon_axe", "weapon_mace", "weapon_spear", "weapon_any"],
+      "armor": ["light", "medium", "heavy"]
+    },
+    "starting_abilities": [
+      "weapon_mastery", "shield_wall", "cleave", "charge",
+      "intimidate", "fortify", "breach"
+    ],
+    "world_hard_locks": [
+      "breach_reinforced",
+      "strength_challenge",
+      "siege_mechanism"
+    ],
+    "world_soft_locks": {
+      "breach":          "advantage",
+      "intimidate_npc":  "advantage",
+      "force_entry":     "advantage"
+    },
+    "progression_mentor_pool": ["mentor_gladiator_mirela", "mentor_warden_commander"]
+  },
+  {
+    "class_id": "mage",
+    "class_label": "Mage",
+    "class_description": "Arcane scholar who perceives the world's invisible layer of magic — glyphs others cannot read, traps others cannot see, constructs others cannot address.",
+    "combat_archetype": "ranged_caster",
+    "base_stats": { "hp": 22, "speed": 6, "attack": 3, "defense": 3, "magic": 8 },
+    "equipment_restrictions": {
+      "weapon": ["weapon_staff", "weapon_dagger", "weapon_wand"],
+      "armor": ["light"]
+    },
+    "starting_abilities": [
+      "arcane_bolt", "area_hex", "barrier", "blink",
+      "identify", "glyph_reading", "detect_magic"
+    ],
+    "world_hard_locks": [
+      "glyph_reading",
+      "identify",
+      "activate_magic_lock",
+      "detect_magical_trap",
+      "communicate_construct"
+    ],
+    "world_soft_locks": {
+      "search_magical":    "advantage",
+      "arcane_knowledge":  "advantage"
+    },
+    "progression_mentor_pool": ["mentor_archmage_velindra", "mentor_hermit_scholar"]
+  },
+  {
+    "class_id": "thief",
+    "class_label": "Thief",
+    "class_description": "Infiltrator who navigates the hidden layer — back passages, locked spaces, and the conversations happening behind closed doors.",
+    "combat_archetype": "mobile_striker",
+    "base_stats": { "hp": 25, "speed": 8, "attack": 5, "defense": 4, "magic": 2 },
+    "equipment_restrictions": {
+      "weapon": ["weapon_dagger", "weapon_short_sword", "weapon_crossbow", "weapon_bow"],
+      "armor": ["light"]
+    },
+    "starting_abilities": [
+      "backstab", "shadow_step", "pickpocket", "lockpick",
+      "eavesdrop", "trap_detection", "disarm_trap", "vanish"
+    ],
+    "world_hard_locks": [
+      "lockpick",
+      "detect_trap",
+      "disarm_trap",
+      "infiltration_route",
+      "black_market"
+    ],
+    "world_soft_locks": {
+      "search_hidden":  "advantage",
+      "pickpocket_npc": "advantage",
+      "eavesdrop_npc":  "advantage",
+      "deception":      "advantage"
+    },
+    "progression_mentor_pool": ["mentor_thieves_guild_master", "mentor_retired_spy"]
+  },
+  {
+    "class_id": "cleric",
+    "class_label": "Cleric",
+    "class_description": "Divine intermediary with authority over sacred spaces, corrupted ground, and the restless dead. Their presence changes what is possible.",
+    "combat_archetype": "support_healer",
+    "base_stats": { "hp": 28, "speed": 5, "attack": 5, "defense": 5, "magic": 6 },
+    "equipment_restrictions": {
+      "weapon": ["weapon_mace", "weapon_staff", "weapon_flail"],
+      "armor": ["light", "medium"]
+    },
+    "starting_abilities": [
+      "cure", "mass_cure", "turn_undead", "smite",
+      "consecrate", "divine_insight", "last_rites", "sanctuary"
+    ],
+    "world_hard_locks": [
+      "consecrate",
+      "divine_ritual",
+      "holy_location_entry",
+      "negotiate_undead"
+    ],
+    "world_soft_locks": {
+      "heal_wounded_npc":    "advantage",
+      "spiritual_authority": "advantage",
+      "lie_detection":       "advantage"
+    },
+    "progression_mentor_pool": ["mentor_temple_high_priest", "mentor_wandering_monk"]
+  }
+]

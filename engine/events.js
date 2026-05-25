@@ -129,6 +129,16 @@ export const Events = {
     _processCandidates(cands, GameState.currentTurn);
   },
 
+  /**
+   * Execute a single action definition directly (used by locks.js for inline
+   * soft-outcome actions without needing a full event wrapper).
+   * @param {object} action  — ActionDefinition
+   * @param {Function} [onDone]
+   */
+  executeAction(action, onDone) {
+    _executeAction(action, onDone ?? (() => {}));
+  },
+
   /** Called when transitioning away from a map. */
   checkMapExit(mapId) {
     if (_paused) return;
@@ -204,7 +214,8 @@ function _evalConditions(event) {
 
 function _evalCondition(c) {
   const gs = GameState;
-  switch (c.type) {
+  // Support both "type" and "condition_type" field names for flexibility
+  switch (c.condition_type ?? c.type) {
     case 'flag_is_set':           return gs.flags.isSet(c.flag_id);
     case 'flag_not_set':          return !gs.flags.isSet(c.flag_id);
     case 'event_complete':        return _completed.has(c.event_id);

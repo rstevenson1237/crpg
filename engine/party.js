@@ -75,8 +75,9 @@ export class Party {
 
   getLead() { return this._active[this._leadIndex] ?? null; }
 
-  get active() { return this._active; }
-  get roster() { return this._roster; }
+  get active()  { return this._active; }
+  get members() { return this._active; }   // alias for console convenience
+  get roster()  { return this._roster; }
 
   // ── Position history ─────────────────────────────────────────────────────────
 
