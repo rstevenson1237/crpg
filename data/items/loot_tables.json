@@ -7,5 +7,14 @@
       { "item_id": "item_torch",         "quantity_min": 1, "quantity_max": 3, "weight": 5 },
       { "item_id": "item_warden_signet", "quantity_min": 1, "quantity_max": 1, "weight": 1 }
     ]
+  },
+  {
+    "loot_table_id": "loot_table_skeleton",
+    "rolls": 2,
+    "entries": [
+      { "item_id": "item_torch",         "quantity_min": 1, "quantity_max": 1, "weight": 5 },
+      { "item_id": "item_iron_sword",    "quantity_min": 1, "quantity_max": 1, "weight": 2 },
+      { "item_id": "item_ancient_tome",  "quantity_min": 1, "quantity_max": 1, "weight": 1 }
+    ]
   }
 ]

@@ -159,6 +159,17 @@ export class CombatGrid {
   }
 
   /**
+   * Overwrite a tile's data. Used by barriers, Breach, etc.
+   * @param {number} x
+   * @param {number} y
+   * @param {{ passable: boolean, type: string }} tile
+   */
+  setTile(x, y, tile) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
+    this._tiles[y][x] = tile;
+  }
+
+  /**
    * Convert logical pixel coords to combat tile coords.
    * Returns { x, y } or null if out of bounds.
    */

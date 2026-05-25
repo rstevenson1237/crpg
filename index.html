@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 10</title>
+  <title>CRPG Engine — Phase 11</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -314,18 +314,28 @@ async function init() {
 
     // C — trigger test combat
     if (input.wasKeyPressed('KeyC') && !combat.isActive()) {
-      const fighter = party.active[0];
+      const [fighter, mage, thief, cleric] = party.active;
       combat.initiate('test_encounter', [
-        { entity: fighter, side: 'party', tile_x: 3, tile_y: 8 },
+        { entity: fighter, side: 'party', tile_x: 2, tile_y: 7 },
+        { entity: mage,    side: 'party', tile_x: 2, tile_y: 9 },
+        { entity: thief,   side: 'party', tile_x: 2, tile_y: 11 },
+        { entity: cleric,  side: 'party', tile_x: 2, tile_y: 13 },
         { entity: { character_id: 'enemy_skeleton_01', display_name: 'Skeleton', class_id: 'skeleton',
-                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2, magic: 0 },
+                    tags: ['undead'] },
           side: 'enemy', tile_x: 20, tile_y: 7 },
         { entity: { character_id: 'enemy_skeleton_02', display_name: 'Skeleton', class_id: 'skeleton',
-                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2 } },
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2, magic: 0 },
+                    tags: ['undead'] },
           side: 'enemy', tile_x: 20, tile_y: 10 },
+        { entity: { character_id: 'enemy_skeleton_03', display_name: 'Skeleton', class_id: 'skeleton',
+                    base_stats: { hp: 15, max_hp: 15, speed: 4, attack: 4, defense: 2, magic: 0 },
+                    tags: ['undead'] },
+          side: 'enemy', tile_x: 20, tile_y: 13 },
       ], (outcome) => {
+        if (outcome === 'defeat') Events.fireActionTrigger('combat_complete', { outcome: 'defeat' });
         console.log(`[Combat] Returned to overworld. Outcome: ${outcome}`);
-      });
+      }, 'loot_table_skeleton');
       input.clearFrameState();
       return;
     }
@@ -445,7 +455,7 @@ async function init() {
   // Fire map-enter triggers (after all handlers are registered)
   Events.checkMapEnter('test_town');
 
-  console.log('Phase 10 — Combat Engine loaded.');
+  console.log('Phase 11 — Combat Resolution loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
   console.log('  J = journal  |  I = inventory  |  F = search hidden');
   console.log('  C = trigger test combat (Fighter vs 2 Skeletons)');
