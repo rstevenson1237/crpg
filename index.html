@@ -112,15 +112,15 @@ async function init() {
   // ── Phase 15: Init Save DB ──
   await Save.init();
 
-  mapData     = await loadMap('/data/maps/test_town.json');
+  mapData     = await loadMap('./data/maps/test_town.json');
   mapRenderer = new MapRenderer(renderer, camera);
   lighting.setMapData(mapData);
 
   const [aldricDef, lyriaDef, kaelDef, miraDef] = await Promise.all([
-    fetch('/data/characters/char_fighter_aldric.json').then(r => r.json()),
-    fetch('/data/characters/char_mage_lyria.json').then(r => r.json()),
-    fetch('/data/characters/char_thief_kael.json').then(r => r.json()),
-    fetch('/data/characters/char_cleric_mira.json').then(r => r.json()),
+    fetch('./data/characters/char_fighter_aldric.json').then(r => r.json()),
+    fetch('./data/characters/char_mage_lyria.json').then(r => r.json()),
+    fetch('./data/characters/char_thief_kael.json').then(r => r.json()),
+    fetch('./data/characters/char_cleric_mira.json').then(r => r.json()),
   ]);
 
   const aldric = new Character(aldricDef);
@@ -138,8 +138,8 @@ async function init() {
 
   // ── Phase 9: Classes, Abilities ──
   const [classesData, abilitiesData] = await Promise.all([
-    fetch('/data/classes/core_classes.json').then(r => r.json()),
-    fetch('/data/abilities/core_abilities.json').then(r => r.json()),
+    fetch('./data/classes/core_classes.json').then(r => r.json()),
+    fetch('./data/abilities/core_abilities.json').then(r => r.json()),
   ]);
   Classes.load(classesData);
   Abilities.loadRegistry(abilitiesData);
@@ -154,16 +154,16 @@ async function init() {
 
   // ── Phase 7: Secrets & Factions ──
   const [secretsData, factionsData] = await Promise.all([
-    fetch('/data/secrets/test_secrets.json').then(r => r.json()),
-    fetch('/data/factions/test_factions.json').then(r => r.json()),
+    fetch('./data/secrets/test_secrets.json').then(r => r.json()),
+    fetch('./data/factions/test_factions.json').then(r => r.json()),
   ]);
   Secrets.load(secretsData);
   Factions.load(factionsData);
 
   // ── Phase 8: Items, Inventory, Equipment ──
   const [itemsData, lootTablesData] = await Promise.all([
-    fetch('/data/items/test_items.json').then(r => r.json()),
-    fetch('/data/items/loot_tables.json').then(r => r.json()),
+    fetch('./data/items/test_items.json').then(r => r.json()),
+    fetch('./data/items/loot_tables.json').then(r => r.json()),
   ]);
   Items.loadRegistry(itemsData);
   LootTables.load(lootTablesData);
@@ -204,7 +204,7 @@ async function init() {
 
   // ── Phase 12: Progression ──
   TrainingUI.init(renderer, input);
-  const mentorsData = await fetch('/data/progression/mentors.json').then(r => r.json());
+  const mentorsData = await fetch('./data/progression/mentors.json').then(r => r.json());
   Progression.loadMentors(mentorsData);
   Progression.setEventFireHandler(eventId => Events.fireEvent(eventId));
   Progression.setNotificationHandler((title, text, onDismiss) => {
@@ -226,14 +226,14 @@ async function init() {
   // ── Phase 13: Encounters, ArenaGenerator, Traps ──
   // Load arena templates
   const [corridorTemplate, fieldTemplate, chamberTemplate] = await Promise.all([
-    fetch('/data/arenas/arena_stone_corridor.json').then(r => r.json()),
-    fetch('/data/arenas/arena_open_field.json').then(r => r.json()),
-    fetch('/data/arenas/arena_dungeon_chamber.json').then(r => r.json()),
+    fetch('./data/arenas/arena_stone_corridor.json').then(r => r.json()),
+    fetch('./data/arenas/arena_open_field.json').then(r => r.json()),
+    fetch('./data/arenas/arena_dungeon_chamber.json').then(r => r.json()),
   ]);
   ArenaGenerator.loadTemplates([corridorTemplate, fieldTemplate, chamberTemplate]);
 
   // Load encounter pools
-  const encounterPoolData = await fetch('/data/encounters/pool_test_wilderness.json').then(r => r.json());
+  const encounterPoolData = await fetch('./data/encounters/pool_test_wilderness.json').then(r => r.json());
   Encounters.loadPool(encounterPoolData);
   Encounters.resetForMap('test_town');
 
@@ -312,7 +312,7 @@ async function init() {
   Dialogue.init(renderer, input);
   Journal.init(renderer, input);
 
-  const npcsData = await fetch('/data/npcs/test_npcs.json').then(r => r.json());
+  const npcsData = await fetch('./data/npcs/test_npcs.json').then(r => r.json());
   NPCs.load(npcsData);
   NPCs.spawnForMap('test_town');
 
@@ -371,7 +371,7 @@ async function init() {
   camera.snapTo(movement.leadX, movement.leadY);
 
   // ── Phase 5: Load events ──
-  const eventsData = await fetch('/data/events/test_events.json').then(r => r.json());
+  const eventsData = await fetch('./data/events/test_events.json').then(r => r.json());
   Events.load(eventsData);
   Events.setMapData(mapData);
   Events.setGameTime(gameTime);

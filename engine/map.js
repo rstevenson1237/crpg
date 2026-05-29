@@ -152,7 +152,7 @@ export class MapData {
  * @param {string} [tilesetBasePath='/data/tilesets/']
  * @returns {Promise<MapData>}
  */
-export async function loadMap(mapJsonPath, tilesetBasePath = '/data/tilesets/') {
+export async function loadMap(mapJsonPath, tilesetBasePath = './data/tilesets/') {
   const resp = await fetch(mapJsonPath);
   if (!resp.ok) throw new Error(`Failed to load map: ${mapJsonPath}`);
   const def = await resp.json();
