@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 13</title>
+  <title>CRPG Engine — Phase 14</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -47,6 +47,7 @@ import { TrainingUI }           from './ui/training_ui.js';
 import { Encounters }           from './engine/encounters.js';
 import { ArenaGenerator }       from './engine/arena_generator.js';
 import { Traps }                from './engine/traps.js';
+import { MusicEngine, MOOD_STATES } from './engine/music.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -86,6 +87,9 @@ let lockToast = null;
 // ─── Phase 13: Trap notification toast ───────────────────────────────────────
 // { text: string, type: "detect"|"trigger"|"disarm", remainMs: number }
 let trapToast = null;
+
+// ─── Phase 14: Music / settings panel ────────────────────────────────────────
+let settingsOpen = false;
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function init() {
@@ -219,10 +223,13 @@ async function init() {
     if (!arenaResult) { console.warn('[Encounters] ArenaGenerator returned null'); return; }
 
     console.log(`[Encounters] Initiating combat: ${encounter.encounter_id}`);
+    MusicEngine.setCombatMode(true);
     combat.initiate(
       encounter.encounter_id,
       arenaResult.combatants,
       (outcome) => {
+        MusicEngine.setCombatMode(false);
+        if (outcome === 'victory') MusicEngine.playStinger('victory');
         console.log(`[Encounters] Combat ended: ${outcome}`);
         if (outcome === 'defeat') Events.fireActionTrigger('combat_complete', { outcome: 'defeat' });
       },
@@ -278,6 +285,7 @@ async function init() {
     id         => Secrets.grant(id),
     id         => Secrets.revoke(id)
   );
+  Secrets.setOnDiscover(() => MusicEngine.playStinger('discovery'));
   Events.setFactionHandler((id, delta) => Factions.modify(id, delta));
 
   // ── Phase 6: NPC system init ──
@@ -359,10 +367,33 @@ async function init() {
 
   GameState.currentMap = 'test_town';
 
-  // ── Log state changes ──
-  gameTime.onStateChange((newState, oldState) => {
+  // ── Phase 14: Music Engine wiring ──
+  MusicEngine.setFlags(GameState.flags);
+  MusicEngine.setGameTime(gameTime);
+  MusicEngine.setWeather(weather);
+
+  // Wire set_music_mood event action
+  Events.setMusicHandler((mood, durationTurns) => MusicEngine.forceMood(mood, durationTurns));
+
+  // Re-evaluate when time of day changes
+  gameTime.onStateChange((newState) => {
+    MusicEngine.evaluate();
     console.log(`Time → ${newState}  (${_timeString()}  Day ${gameTime.dayNumber})`);
   });
+
+  // Load town profile and start playback on first user interaction
+  MusicEngine.loadProfile('music_town_peaceful');
+  MusicEngine.loadProfile('music_dungeon_tense');
+
+  // Initialize AudioContext on the first user input (browser autoplay policy)
+  const _musicInit = () => {
+    if (!MusicEngine.isInitialized()) {
+      MusicEngine.init();
+      MusicEngine.setProfile(mapData.def.music_profile ?? 'music_town_peaceful');
+    }
+  };
+  document.addEventListener('keydown',  _musicInit, { once: true });
+  document.addEventListener('mousedown', _musicInit, { once: true });
 
   loop.onTick((deltaMs) => {
     // Narration card: dismiss on any keypress
@@ -376,6 +407,23 @@ async function init() {
 
     // Block all other input while event engine is paused (screen_fade, etc.)
     if (Events.isPaused()) {
+      input.clearFrameState();
+      return;
+    }
+
+    // ── Phase 14: Settings panel input handling ──
+    if (settingsOpen) {
+      if (input.wasKeyPressed('KeyO') || input.wasKeyPressed('Escape')) settingsOpen = false;
+      // Volume slider click (PX=210, PY=150, sliderX=222, sliderY=192, sliderW=196)
+      if (input.wasMouseClicked()) {
+        const mouse = input.getMouseScreen();
+        const sliderX = 222, sliderY = 192, sliderW = 196, sliderH = 10;
+        if (mouse.x >= sliderX && mouse.x <= sliderX + sliderW &&
+            mouse.y >= sliderY && mouse.y <= sliderY + sliderH) {
+          MusicEngine.setVolume((mouse.x - sliderX) / sliderW);
+          if (MusicEngine.isMuted()) MusicEngine.unmute();
+        }
+      }
       input.clearFrameState();
       return;
     }
@@ -429,6 +477,7 @@ async function init() {
     // C — trigger test combat
     if (input.wasKeyPressed('KeyC') && !combat.isActive()) {
       const [fighter, mage, thief, cleric] = party.active;
+      MusicEngine.setCombatMode(true);
       combat.initiate('test_encounter', [
         { entity: fighter, side: 'party', tile_x: 2, tile_y: 7 },
         { entity: mage,    side: 'party', tile_x: 2, tile_y: 9 },
@@ -447,6 +496,8 @@ async function init() {
                     tags: ['undead'] },
           side: 'enemy', tile_x: 20, tile_y: 13 },
       ], (outcome) => {
+        MusicEngine.setCombatMode(false);
+        if (outcome === 'victory') MusicEngine.playStinger('victory');
         if (outcome === 'defeat') Events.fireActionTrigger('combat_complete', { outcome: 'defeat' });
         console.log(`[Combat] Returned to overworld. Outcome: ${outcome}`);
       }, 'loot_table_skeleton');
@@ -491,6 +542,8 @@ async function init() {
     if (movementDelta > 0) {
       gameTime.advance(movementDelta);
       Events.tick(GameState.currentTurn);
+      MusicEngine.tick();
+      MusicEngine.evaluate();
       Traps.onTurnAdvance(GameState.currentTurn);
       // ── Phase 6: Update NPC schedules and facing ──
       NPCs.update(gameTime);
@@ -533,11 +586,14 @@ async function init() {
       weatherIdx = (weatherIdx + 1) % WEATHER_CYCLE.length;
       const next = WEATHER_CYCLE[weatherIdx];
       weather.setState(next);
+      MusicEngine.evaluate();
       console.log(`Weather → ${next}`);
     }
 
     if (input.wasKeyPressed('F1')) debugOverlay = !debugOverlay;
     if (input.wasKeyPressed('KeyL')) worldLogVisible = !worldLogVisible;
+    if (input.wasKeyPressed('KeyO')) settingsOpen = !settingsOpen;
+    if (input.wasKeyPressed('KeyM')) MusicEngine.toggleMute();
 
     input.clearFrameState();
   });
@@ -645,6 +701,25 @@ async function init() {
   console.log('  Party.setMax(1)  → solo party for hard-lock testing');
   console.log('  Party.setLead("char_thief_kael")  → switch to Thief lead');
   console.log('  GameState.party.members[0].use_tracked_skills  → check use counts');
+
+  console.log('');
+  console.log('Phase 14 — Music & Mood System loaded.');
+  console.log('  Press any key or click to activate AudioContext (browser autoplay policy).');
+  console.log('  M = toggle mute  |  O = open settings panel (volume slider + mood display)');
+  console.log('  T = skip time (peaceful→mysterious at night)');
+  console.log('  W = cycle weather (heavy_rain/storm → tense; fog → mysterious)');
+  console.log('  C = start combat (music switches to combat mood, victory stinger on win)');
+  console.log('  F = search (discovery stinger on secret found)');
+  console.log('');
+  console.log('  Console shortcuts:');
+  console.log('  MusicEngine.forceMood("triumphant", 5)  → triumphant for 5 turns then revert');
+  console.log('  MusicEngine.forceMood("dread")          → indefinite dread override');
+  console.log('  MusicEngine.clearForcedMood()           → revert to profile resolution');
+  console.log('  MusicEngine.playStinger("discovery")    → play discovery stinger');
+  console.log('  MusicEngine.playStinger("victory")      → play victory stinger');
+  console.log('  MusicEngine.setVolume(0.3)              → set volume to 30%');
+  console.log('  MusicEngine.getCurrentMood()            → current active mood string');
+  console.log('  GameState.flags.set("flag_boss_awakened") + MusicEngine.evaluate() → danger mood');
 }
 
 // ─── Phase 13: Helpers ────────────────────────────────────────────────────────
@@ -782,17 +857,29 @@ function renderUI(deltaMs = 0) {
   ctx.textAlign = 'right';
   ctx.fillText(clockText, 632, 6);
 
-  // ── Tile coords / debug — below clock ──
+  // ── Mute button — top-right below clock ──
+  const muteIcon = MusicEngine.isMuted() ? '[M] 🔇' : '[M] 🔊';
+  const moodStr  = MusicEngine.isInitialized() ? `  ${MusicEngine.getCurrentMood()}` : '';
+  const muteText = muteIcon + moodStr;
+  ctx.font = '10px monospace';
+  const mw = ctx.measureText(muteText).width + 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(636 - mw, 23, mw, 14);
+  ctx.fillStyle = MusicEngine.isMuted() ? '#888888' : '#aaddaa';
+  ctx.textAlign = 'right';
+  ctx.fillText(muteText, 632, 25);
+
+  // ── Tile coords / debug — further below ──
   const coordText = debugOverlay
     ? `Tile: ${movement.leadX}, ${movement.leadY}  Turn: ${GameState.currentTurn}`
     : `[F1] debug`;
   const dbW = debugOverlay ? 260 : 90;
   ctx.font = '10px monospace';
   ctx.fillStyle = 'rgba(0,0,0,0.50)';
-  ctx.fillRect(636 - dbW, 24, dbW, 14);
+  ctx.fillRect(636 - dbW, 40, dbW, 14);
   ctx.fillStyle = '#aaaaaa';
   ctx.textAlign = 'right';
-  ctx.fillText(coordText, 632, 26);
+  ctx.fillText(coordText, 632, 42);
 
   // ── Extended debug info ──
   if (debugOverlay && mapData) {
@@ -800,23 +887,25 @@ function renderUI(deltaMs = 0) {
     const tile = mapData.getTile(x, y, mapData.currentFloor);
     const obj  = mapData.getObjectAt(x, y, mapData.currentFloor);
     ctx.fillStyle = 'rgba(0,0,0,0.70)';
-    ctx.fillRect(392, 42, 244, 100);
+    ctx.fillRect(392, 58, 244, 115);
     ctx.font = '10px monospace';
     ctx.textAlign = 'right';
     ctx.fillStyle = '#ccffcc';
-    ctx.fillText(`Tile: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 45);
+    ctx.fillText(`Tile: ${tile ? JSON.stringify(tile.tags) : 'none'}`, 632, 60);
     ctx.fillStyle = '#ffcccc';
-    ctx.fillText(`Passable: ${mapData.isPassable(x, y, 0)}`, 632, 58);
+    ctx.fillText(`Passable: ${mapData.isPassable(x, y, 0)}`, 632, 73);
     ctx.fillStyle = '#ccccff';
-    ctx.fillText(`Object: ${obj ? obj.object_id : 'none'}`, 632, 71);
+    ctx.fillText(`Object: ${obj ? obj.object_id : 'none'}`, 632, 86);
     ctx.fillStyle = '#ffffcc';
-    ctx.fillText(`Time: ${gameTime.getState()}  Turn: ${GameState.currentTurn}`, 632, 84);
+    ctx.fillText(`Time: ${gameTime.getState()}  Turn: ${GameState.currentTurn}`, 632, 99);
     ctx.fillStyle = '#ffccff';
-    ctx.fillText(`Weather: ${weather.getState()}`, 632, 97);
+    ctx.fillText(`Weather: ${weather.getState()}`, 632, 112);
     ctx.fillStyle = '#ccffff';
-    ctx.fillText(`Ambient: ${mapData.def.ambient_light ?? 'none'}`, 632, 110);
+    ctx.fillText(`Ambient: ${mapData.def.ambient_light ?? 'none'}`, 632, 125);
+    ctx.fillStyle = '#aaffdd';
+    ctx.fillText(`Music: ${MusicEngine.getCurrentMood()}`, 632, 138);
     ctx.fillStyle = '#ffddaa';
-    ctx.fillText(`chest_touched: ${GameState.flags.isSet('chest_touched')}`, 632, 123);
+    ctx.fillText(`chest_touched: ${GameState.flags.isSet('chest_touched')}`, 632, 151);
   }
 
   // ── Party portrait HUD — bottom-left ──
@@ -904,6 +993,9 @@ function renderUI(deltaMs = 0) {
 
   // ── Phase 13: Trap toast ──
   if (trapToast) _renderTrapToast(dctx, trapToast);
+
+  // ── Phase 14: Settings panel (O key) ──
+  if (settingsOpen) _renderSettingsPanel(dctx);
 
   // ── Phase 13: Trap indicators on map ──
   _renderTrapOverlay(dctx);
@@ -1182,6 +1274,97 @@ function _renderLockToast(ctx, toast) {
   lines.forEach((line, i) => ctx.fillText(line, px + 12, py + 8 + i * 15));
 
   ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ─── Phase 14: Settings Panel ────────────────────────────────────────────────
+
+/**
+ * Renders a compact settings panel over the DIALOGUE layer.
+ * Shows: volume slider, mute toggle, active mood, all MOOD_STATES listed.
+ * Mouse click on the volume slider bar adjusts volume.
+ */
+function _renderSettingsPanel(ctx) {
+  const PW = 220, PH = 180;
+  const PX = Math.round((640 - PW) / 2);
+  const PY = Math.round((480 - PH) / 2);
+
+  ctx.save();
+
+  // Background
+  ctx.fillStyle = 'rgba(10,14,22,0.96)';
+  ctx.fillRect(PX, PY, PW, PH);
+  ctx.strokeStyle = '#445566';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(PX, PY, PW, PH);
+
+  // Title
+  ctx.fillStyle = '#ffe880';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('SETTINGS  [O] to close', PX + PW / 2, PY + 8);
+
+  // Separator
+  ctx.strokeStyle = '#334455';
+  ctx.beginPath();
+  ctx.moveTo(PX + 10, PY + 22);
+  ctx.lineTo(PX + PW - 10, PY + 22);
+  ctx.stroke();
+
+  // Volume label
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#aaaaaa';
+  ctx.fillText('Volume  [M] mute', PX + 12, PY + 28);
+
+  // Volume slider
+  const sliderX = PX + 12, sliderY = PY + 42, sliderW = PW - 24, sliderH = 10;
+  ctx.fillStyle = '#223344';
+  ctx.fillRect(sliderX, sliderY, sliderW, sliderH);
+  ctx.fillStyle = MusicEngine.isMuted() ? '#555555' : '#44aaee';
+  ctx.fillRect(sliderX, sliderY, Math.round(sliderW * MusicEngine.getVolume()), sliderH);
+  ctx.strokeStyle = '#557799';
+  ctx.strokeRect(sliderX, sliderY, sliderW, sliderH);
+
+  // Volume percentage
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'right';
+  ctx.fillText(
+    MusicEngine.isMuted() ? 'MUTED' : `${Math.round(MusicEngine.getVolume() * 100)}%`,
+    PX + PW - 12, PY + 42,
+  );
+
+  // Current mood display
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#aaaaaa';
+  ctx.fillText('Current mood:', PX + 12, PY + 60);
+  ctx.fillStyle = '#88ffcc';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(MusicEngine.getCurrentMood().toUpperCase(), PX + 100, PY + 60);
+
+  // All moods list in two columns
+  ctx.font = '9px monospace';
+  const midX = PX + PW / 2;
+  const moods = MOOD_STATES;
+  const currentMood = MusicEngine.getCurrentMood();
+  let col = 0, row = 0;
+  for (const m of moods) {
+    const mx2 = col === 0 ? PX + 12 : midX + 4;
+    const my2 = PY + 78 + row * 14;
+    ctx.fillStyle = m === currentMood ? '#ffee66' : '#667788';
+    ctx.textAlign = 'left';
+    ctx.fillText((m === currentMood ? '▶ ' : '  ') + m, mx2, my2);
+    col++;
+    if (col >= 2) { col = 0; row++; }
+  }
+
+  // Hint
+  ctx.fillStyle = '#446688';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('[O] close  |  click slider to set volume', PX + PW / 2, PY + PH - 12);
+
   ctx.restore();
 }
 

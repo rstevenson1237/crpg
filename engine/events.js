@@ -25,6 +25,7 @@ let _inventoryAddHandler    = null;  // (itemId, qty) => void
 let _inventoryRemoveHandler = null;  // (itemId, qty) => boolean
 let _lootTableRollHandler   = null;  // (tableId) => [{item_id, quantity}]
 let _progressionHandler     = null;  // (characterDef, abilityId) => void — Phase 12
+let _musicHandler           = null;  // (mood, durationTurns|null) => void — Phase 14
 let _mapDataRef  = null;
 let _gameTimeRef = null;
 let _weatherRef  = null;
@@ -63,6 +64,7 @@ export const Events = {
     _lootTableRollHandler   = rollFn;
   },
   setProgressionHandler(fn) { _progressionHandler = fn; },
+  setMusicHandler(fn)       { _musicHandler       = fn; },
   setMapData(md)   { _mapDataRef  = md; },
   setGameTime(gt)  { _gameTimeRef = gt; },
   setWeather(w)    { _weatherRef  = w; },
@@ -465,12 +467,16 @@ function _executeAction(action, next) {
       next(); break;
     }
 
+    case 'set_music_mood':
+      if (_musicHandler) _musicHandler(action.mood, action.override_duration_turns ?? null);
+      else console.log(`[Events] set_music_mood (no handler): mood=${action.mood}`);
+      next(); break;
+
     case 'add_party_member': case 'remove_party_member':
     case 'lock_party_member': case 'unlock_party_member':
     case 'modify_npc_schedule':
     case 'trigger_encounter':
     case 'teleport_party': case 'grant_mentor_training':
-    case 'set_music_mood':
       console.log(`[Events] Stub action: ${action.type}`);
       next(); break;
 

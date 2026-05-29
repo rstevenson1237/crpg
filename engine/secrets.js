@@ -15,10 +15,14 @@ import { Events }    from './events.js';
 const TOAST_DURATION_MS = 3000;
 const TOAST_FADE_MS     = 300;
 
-let _registry = new Map();  // secret_id → def
-let _toast    = null;       // { text, remainMs } | null
+let _registry      = new Map();  // secret_id → def
+let _toast         = null;       // { text, remainMs } | null
+let _onDiscoverCb  = null;       // () => void — called on first discovery (stinger hook)
 
 export const Secrets = {
+
+  /** Register a callback invoked once per newly discovered secret (for stingers). */
+  setOnDiscover(fn) { _onDiscoverCb = fn; },
 
   /** @param {Array} arr — loaded from data/secrets/*.json */
   load(arr) {
@@ -38,6 +42,7 @@ export const Secrets = {
       const label = def?.label ?? secretId;
       _toast = { text: `Secret discovered: ${label}`, remainMs: TOAST_DURATION_MS };
       console.log(`[Secrets] Discovered: ${secretId}`);
+      if (_onDiscoverCb) _onDiscoverCb();
       Events.fireActionTrigger('secret_discovered', { secret_id: secretId });
     }
   },
