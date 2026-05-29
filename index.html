@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRPG Engine — Phase 14</title>
+  <title>CRPG Engine — Phase 15</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -48,6 +48,8 @@ import { Encounters }           from './engine/encounters.js';
 import { ArenaGenerator }       from './engine/arena_generator.js';
 import { Traps }                from './engine/traps.js';
 import { MusicEngine, MOOD_STATES } from './engine/music.js';
+import { Save }                     from './engine/save.js';
+import { MainMenu }                 from './ui/main_menu.js';
 
 // ─── Engine Setup ─────────────────────────────────────────────────────────────
 const renderer = new Renderer();
@@ -91,8 +93,25 @@ let trapToast = null;
 // ─── Phase 14: Music / settings panel ────────────────────────────────────────
 let settingsOpen = false;
 
+// ─── Phase 15: Save / Load / Menu ────────────────────────────────────────────
+let gamePhase = 'menu';   // 'menu' | 'playing' | 'paused'
+let menu      = null;     // MainMenu instance
+let saveToast = null;     // { text, remainMs, ok }
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
+
+/** Called when the player commits to starting/resuming a game. */
+function startGameLoop() {
+  gamePhase = 'playing';
+  loop.start();
+  // Fire map-enter triggers
+  Events.checkMapEnter('test_town');
+}
+
 async function init() {
+  // ── Phase 15: Init Save DB ──
+  await Save.init();
+
   mapData     = await loadMap('/data/maps/test_town.json');
   mapRenderer = new MapRenderer(renderer, camera);
   lighting.setMapData(mapData);
@@ -177,6 +196,7 @@ async function init() {
   // Add window reference for console access
   window.GameState  = GameState;
   window.Party      = party;
+  window.Save       = Save;
 
   // ── Phase 10: Combat Engine ──
   const combat = new CombatEngine(renderer, input);
@@ -396,6 +416,9 @@ async function init() {
   document.addEventListener('mousedown', _musicInit, { once: true });
 
   loop.onTick((deltaMs) => {
+    // While paused or in menu, the _menuFrame rAF loop handles input/render.
+    if (gamePhase !== 'playing') { input.clearFrameState(); return; }
+
     // Narration card: dismiss on any keypress
     if (narrationCard && input.wasAnyKeyPressed()) {
       const cb = narrationCard.onDismiss;
@@ -411,9 +434,41 @@ async function init() {
       return;
     }
 
+    // ── Phase 15: Pause menu (Escape) ──
+    if (input.wasKeyPressed('Escape') && !settingsOpen) {
+      gamePhase = 'paused';
+      menu.setOnResume(() => { gamePhase = 'playing'; });
+      menu.showPause();
+      input.clearFrameState();
+      return;
+    }
+
+    // ── Phase 15: Quick save (F5) / quick load (F9) ──
+    if (input.wasKeyPressed('F5')) {
+      Save.save(0, 'Quick Save').then(() => {
+        saveToast = { text: 'Game saved.', remainMs: 2000, ok: true };
+      }).catch(e => {
+        saveToast = { text: 'Save failed: ' + e.message, remainMs: 3000, ok: false };
+      });
+      input.clearFrameState();
+      return;
+    }
+    if (input.wasKeyPressed('F9')) {
+      Save.load(0).then(data => {
+        if (!data) { saveToast = { text: 'No save in slot 1.', remainMs: 2000, ok: false }; return; }
+        camera.snapTo(movement.leadX, movement.leadY);
+        if (MusicEngine.isInitialized()) { MusicEngine.setFlags(GameState.flags); MusicEngine.evaluate(); }
+        saveToast = { text: 'Game loaded.', remainMs: 2000, ok: true };
+      }).catch(e => {
+        saveToast = { text: 'Load failed: ' + e.message, remainMs: 3000, ok: false };
+      });
+      input.clearFrameState();
+      return;
+    }
+
     // ── Phase 14: Settings panel input handling ──
     if (settingsOpen) {
-      if (input.wasKeyPressed('KeyO') || input.wasKeyPressed('Escape')) settingsOpen = false;
+      if (input.wasKeyPressed('KeyO')) settingsOpen = false;
       // Volume slider click (PX=210, PY=150, sliderX=222, sliderY=192, sliderW=196)
       if (input.wasMouseClicked()) {
         const mouse = input.getMouseScreen();
@@ -503,6 +558,12 @@ async function init() {
       }, 'loot_table_skeleton');
       input.clearFrameState();
       return;
+    }
+
+    // Decay save toast
+    if (saveToast) {
+      saveToast.remainMs -= deltaMs;
+      if (saveToast.remainMs <= 0) saveToast = null;
     }
 
     // Decay lock toast
@@ -656,12 +717,75 @@ async function init() {
     renderer.composite();
   });
 
-  loop.start();
+  // ── Phase 15: Save system wiring ──
+  Save.connect({ GameState, party, mapData, Inventory, Events, gameTime, weather, movement, Character });
 
-  // Fire map-enter triggers (after all handlers are registered)
-  Events.checkMapEnter('test_town');
+  // ── Phase 15: Main menu ──
+  menu = new MainMenu(renderer.canvas, input, Save);
 
-  console.log('Phase 13 — Encounter Generation & Traps loaded.');
+  menu.setOnNewGame(() => {
+    gamePhase = 'playing';
+    loop.start();
+    Events.checkMapEnter('test_town');
+  });
+
+  menu.setOnLoadGame(async (data) => {
+    // After load, snap camera and re-evaluate music
+    camera.snapTo(movement.leadX, movement.leadY);
+    NPCs.update(gameTime);
+    if (MusicEngine.isInitialized()) {
+      MusicEngine.setFlags(GameState.flags);
+      MusicEngine.setWeather(weather);
+      MusicEngine.evaluate();
+    }
+    gamePhase = 'playing';
+    loop.start();
+  });
+
+  menu.setOnResume(() => {
+    gamePhase = 'playing';
+  });
+
+  menu.setOnMainMenu(async () => {
+    gamePhase = 'menu';
+    loop.stop?.();  // stop if loop supports it
+    await menu.showTitle();
+  });
+
+  // Show title screen first
+  await menu.showTitle();
+
+  // Menu render loop (runs independently from game loop)
+  function _menuFrame(ts) {
+    if (gamePhase === 'menu' || gamePhase === 'paused') {
+      const delta = _menuFrame._last ? Math.min(ts - _menuFrame._last, 100) : 16;
+      _menuFrame._last = ts;
+
+      if (gamePhase === 'paused') {
+        // Render frozen world frame as background, then overlay menu
+        camera.update();
+        renderer.clearLayer(LAYER.EFFECTS);
+        mapRenderer.render(mapData, movement.leadX, movement.leadY);
+        party.render(renderer, camera, movement.leadX, movement.leadY, 0);
+        NPCs.render(renderer, camera, GameState.currentMap, 0);
+        weather.update(0);
+        lighting.render(0, _buildLightSources());
+        renderUI(0);
+        renderer.composite();
+      }
+
+      menu.handleInput();
+      input.clearFrameState();
+      menu.render(delta);
+    } else {
+      _menuFrame._last = null;
+    }
+    requestAnimationFrame(_menuFrame);
+  }
+  _menuFrame._last = null;
+  requestAnimationFrame(_menuFrame);
+
+  console.log('Phase 15 — Save/Load System & UI Polish loaded.');
   console.log('  T = time skip  |  W = weather  |  F1 = debug  |  L = world log');
   console.log('  J = journal  |  I = inventory  |  F = search / detect traps');
   console.log('  C = trigger test combat (4 party vs 3 skeletons)');
@@ -703,23 +827,17 @@ async function init() {
   console.log('  GameState.party.members[0].use_tracked_skills  → check use counts');
 
   console.log('');
-  console.log('Phase 14 — Music & Mood System loaded.');
-  console.log('  Press any key or click to activate AudioContext (browser autoplay policy).');
-  console.log('  M = toggle mute  |  O = open settings panel (volume slider + mood display)');
-  console.log('  T = skip time (peaceful→mysterious at night)');
-  console.log('  W = cycle weather (heavy_rain/storm → tense; fog → mysterious)');
-  console.log('  C = start combat (music switches to combat mood, victory stinger on win)');
-  console.log('  F = search (discovery stinger on secret found)');
+  console.log('Phase 15 — Save/Load System loaded.');
+  console.log('  Main menu shows on startup — choose New Game or load a save.');
+  console.log('  Esc = pause menu (Resume / Save / Load / Main Menu)');
+  console.log('  F5  = quick save to slot 1  |  F9 = quick load from slot 1');
+  console.log('  M = toggle mute  |  O = settings panel  |  T = time skip  |  W = weather');
   console.log('');
   console.log('  Console shortcuts:');
-  console.log('  MusicEngine.forceMood("triumphant", 5)  → triumphant for 5 turns then revert');
-  console.log('  MusicEngine.forceMood("dread")          → indefinite dread override');
-  console.log('  MusicEngine.clearForcedMood()           → revert to profile resolution');
-  console.log('  MusicEngine.playStinger("discovery")    → play discovery stinger');
-  console.log('  MusicEngine.playStinger("victory")      → play victory stinger');
-  console.log('  MusicEngine.setVolume(0.3)              → set volume to 30%');
-  console.log('  MusicEngine.getCurrentMood()            → current active mood string');
-  console.log('  GameState.flags.set("flag_boss_awakened") + MusicEngine.evaluate() → danger mood');
+  console.log('  Save.save(0, "My Save")  → save to slot 0');
+  console.log('  Save.load(0)             → restore from slot 0');
+  console.log('  Save.getSaveInfo(0)      → check slot metadata');
+  console.log('  Save.deleteSave(0)       → wipe slot 0');
 }
 
 // ─── Phase 13: Helpers ────────────────────────────────────────────────────────
@@ -987,6 +1105,9 @@ function renderUI(deltaMs = 0) {
   Factions.updateToast(deltaMs);
   Secrets.renderToast(dctx, 8);
   Factions.renderToast(dctx, 36);
+
+  // ── Phase 15: Save/Load toast ──
+  if (saveToast) _renderSaveToast(dctx, saveToast);
 
   // ── Phase 9: Lock result toast ──
   if (lockToast) _renderLockToast(dctx, lockToast);
@@ -1365,6 +1486,28 @@ function _renderSettingsPanel(ctx) {
   ctx.textAlign = 'center';
   ctx.fillText('[O] close  |  click slider to set volume', PX + PW / 2, PY + PH - 12);
 
+  ctx.restore();
+}
+
+// ─── Phase 15: Save toast renderer ───────────────────────────────────────────
+
+function _renderSaveToast(ctx, toast) {
+  const alpha = toast.remainMs < 500 ? toast.remainMs / 500 : 1.0;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+  const tw = ctx.measureText(toast.text).width + 24;
+  const bx = 320 - tw / 2;
+  const by = 64;
+  ctx.fillStyle   = toast.ok ? 'rgba(10,30,10,0.92)' : 'rgba(30,10,10,0.92)';
+  ctx.fillRect(bx, by, tw, 22);
+  ctx.strokeStyle = toast.ok ? '#44cc44' : '#cc4444';
+  ctx.lineWidth   = 1;
+  ctx.strokeRect(bx, by, tw, 22);
+  ctx.fillStyle   = toast.ok ? '#aaffaa' : '#ffaaaa';
+  ctx.fillText(toast.text, 320, by + 5);
   ctx.restore();
 }
 

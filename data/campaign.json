@@ -1,0 +1,17 @@
+{
+  "campaign_id": "crpg_prototype",
+  "title": "CRPG Engine",
+  "subtitle": "A Prototype Adventure",
+  "start_map": "test_town",
+  "start_position": { "tile_x": 15, "tile_y": 15 },
+  "music_profile": "music_town_peaceful",
+  "starting_party": [
+    "char_fighter_aldric",
+    "char_mage_lyria",
+    "char_thief_kael",
+    "char_cleric_mira"
+  ],
+  "starting_inventory": [
+    { "item_id": "item_torch", "quantity": 1 }
+  ]
+}

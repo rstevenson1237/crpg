@@ -135,6 +135,8 @@ export class MapData {
     if (newState === 'closed' || newState === 'locked') obj.passable = false;
   }
 
+  getVisitedTiles() { return this._visited; }
+
   get currentFloor() { return this._floor; }
   get width()  { return this._def.width; }
   get height() { return this._def.height; }
