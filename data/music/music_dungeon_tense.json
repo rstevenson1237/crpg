@@ -1,0 +1,19 @@
+{
+  "profile_id": "music_dungeon_tense",
+  "base_mood": "tense",
+  "stems": {
+    "base": null,
+    "tension": null,
+    "melody": null
+  },
+  "time_of_day_overrides": {
+    "night":    "dread",
+    "midnight": "dread"
+  },
+  "weather_overrides": {
+    "storm": "danger"
+  },
+  "event_flag_overrides": [
+    { "flag_id": "flag_boss_awakened", "override_mood": "danger" }
+  ]
+}

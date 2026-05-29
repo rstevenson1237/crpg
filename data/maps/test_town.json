@@ -8,7 +8,7 @@
   "floors": 1,
   "current_floor": 0,
   "ambient_light": "bright",
-  "music_profile": "town_peaceful",
+  "music_profile": "music_town_peaceful",
   "weather_enabled": true,
   "tiles": [
     0,

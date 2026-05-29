@@ -1,0 +1,1042 @@
+[
+  {
+    "asset_id": "enemy_skeleton_warrior",
+    "asset_label": "Enemy: Skeleton Warrior",
+    "output_file": "enemy_skeleton_warrior.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_skeleton_warrior_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_skeleton_warrior_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_skeleton_warrior_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_skeleton_warrior_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_skeleton_warrior_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_skeleton_warrior_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_skeleton_warrior_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_skeleton_warrior_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_skeleton_warrior_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_skeleton_warrior_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_skeleton_warrior_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_skeleton_warrior_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_skeleton_archer",
+    "asset_label": "Enemy: Skeleton Archer",
+    "output_file": "enemy_skeleton_archer.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_skeleton_archer_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_skeleton_archer_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_skeleton_archer_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_skeleton_archer_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_skeleton_archer_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_skeleton_archer_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_skeleton_archer_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_skeleton_archer_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_skeleton_archer_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_skeleton_archer_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_skeleton_archer_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_skeleton_archer_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_zombie",
+    "asset_label": "Enemy: Zombie",
+    "output_file": "enemy_zombie.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_zombie_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_zombie_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_zombie_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_zombie_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_zombie_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_zombie_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_zombie_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_zombie_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_zombie_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_zombie_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_zombie_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_zombie_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_ghost",
+    "asset_label": "Enemy: Ghost",
+    "output_file": "enemy_ghost.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_ghost_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_ghost_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_ghost_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_ghost_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_ghost_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_ghost_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_ghost_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_ghost_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_ghost_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_ghost_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_ghost_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_ghost_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_wolf",
+    "asset_label": "Enemy: Wolf",
+    "output_file": "enemy_wolf.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_wolf_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_wolf_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_wolf_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_wolf_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_wolf_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_wolf_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_wolf_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_wolf_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_wolf_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_wolf_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_wolf_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_wolf_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_giant_rat",
+    "asset_label": "Enemy: Giant Rat",
+    "output_file": "enemy_giant_rat.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_giant_rat_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_giant_rat_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_giant_rat_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_giant_rat_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_giant_rat_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_giant_rat_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_giant_rat_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_giant_rat_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_giant_rat_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_giant_rat_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_giant_rat_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_giant_rat_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_goblin",
+    "asset_label": "Enemy: Goblin",
+    "output_file": "enemy_goblin.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_goblin_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_goblin_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_goblin_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_goblin_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_goblin_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_goblin_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_goblin_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_goblin_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_goblin_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_goblin_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_goblin_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_goblin_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_orc_warrior",
+    "asset_label": "Enemy: Orc Warrior",
+    "output_file": "enemy_orc_warrior.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_orc_warrior_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_orc_warrior_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_orc_warrior_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_orc_warrior_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_orc_warrior_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_orc_warrior_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_orc_warrior_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_orc_warrior_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_orc_warrior_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_orc_warrior_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_orc_warrior_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_orc_warrior_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_orc_shaman",
+    "asset_label": "Enemy: Orc Shaman",
+    "output_file": "enemy_orc_shaman.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_orc_shaman_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_orc_shaman_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_orc_shaman_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_orc_shaman_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_orc_shaman_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_orc_shaman_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_orc_shaman_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_orc_shaman_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_orc_shaman_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_orc_shaman_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_orc_shaman_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_orc_shaman_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_bandit",
+    "asset_label": "Enemy: Bandit",
+    "output_file": "enemy_bandit.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_bandit_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_bandit_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_bandit_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_bandit_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_bandit_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_bandit_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_bandit_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_bandit_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_bandit_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_bandit_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_bandit_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_bandit_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_bandit_crossbow",
+    "asset_label": "Enemy: Bandit (Crossbow)",
+    "output_file": "enemy_bandit_crossbow.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_bandit_crossbow_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_bandit_crossbow_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_bandit_crossbow_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_bandit_crossbow_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_bandit_crossbow_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_bandit_crossbow_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_bandit_crossbow_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_bandit_crossbow_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_bandit_crossbow_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_bandit_crossbow_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_bandit_crossbow_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_bandit_crossbow_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_cultist",
+    "asset_label": "Enemy: Cultist",
+    "output_file": "enemy_cultist.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_cultist_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_cultist_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_cultist_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_cultist_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_cultist_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_cultist_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_cultist_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_cultist_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_cultist_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_cultist_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_cultist_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_cultist_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_wraith",
+    "asset_label": "Enemy: Wraith",
+    "output_file": "enemy_wraith.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_wraith_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_wraith_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_wraith_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_wraith_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_wraith_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_wraith_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_wraith_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_wraith_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_wraith_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_wraith_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_wraith_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_wraith_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_golem_stone",
+    "asset_label": "Enemy: Stone Golem (48\u00d748)",
+    "output_file": "enemy_golem_stone.png",
+    "output_width": 144,
+    "output_height": 192,
+    "frame_width": 48,
+    "frame_height": 48,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_golem_stone_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_golem_stone_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_golem_stone_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_golem_stone_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_golem_stone_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_golem_stone_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_golem_stone_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_golem_stone_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_golem_stone_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_golem_stone_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_golem_stone_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_golem_stone_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_troll",
+    "asset_label": "Enemy: Troll (48\u00d748)",
+    "output_file": "enemy_troll.png",
+    "output_width": 144,
+    "output_height": 192,
+    "frame_width": 48,
+    "frame_height": 48,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_troll_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_troll_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_troll_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_troll_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_troll_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_troll_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_troll_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_troll_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_troll_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_troll_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_troll_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_troll_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "enemy_dragon_young",
+    "asset_label": "Enemy: Young Dragon (64\u00d764)",
+    "output_file": "enemy_dragon_young.png",
+    "output_width": 192,
+    "output_height": 256,
+    "frame_width": 64,
+    "frame_height": 64,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "enemy_dragon_young_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "enemy_dragon_young_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "enemy_dragon_young_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "enemy_dragon_young_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "enemy_dragon_young_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "enemy_dragon_young_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "enemy_dragon_young_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "enemy_dragon_young_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "enemy_dragon_young_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "enemy_dragon_young_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "enemy_dragon_young_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "enemy_dragon_young_w_r"
+        }
+      ]
+    }
+  }
+]

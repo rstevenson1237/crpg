@@ -1,0 +1,72 @@
+[
+  {
+    "asset_id": "ui_portrait_frame",
+    "asset_label": "UI: Portrait Frame",
+    "output_file": "ui_portrait_frame.png",
+    "output_width": 72, "output_height": 72,
+    "frame_width": 72, "frame_height": 72,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_portrait_frame"}]}
+  },
+  {
+    "asset_id": "ui_dialogue_box",
+    "asset_label": "UI: Dialogue Box",
+    "output_file": "ui_dialogue_box.png",
+    "output_width": 640, "output_height": 120,
+    "frame_width": 640, "frame_height": 120,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_dialogue_box"}]}
+  },
+  {
+    "asset_id": "ui_inventory_slot",
+    "asset_label": "UI: Inventory Slot",
+    "output_file": "ui_inventory_slot.png",
+    "output_width": 36, "output_height": 36,
+    "frame_width": 36, "frame_height": 36,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_inventory_slot"}]}
+  },
+  {
+    "asset_id": "ui_inventory_slot_hover",
+    "asset_label": "UI: Inventory Slot (Hover)",
+    "output_file": "ui_inventory_slot_hover.png",
+    "output_width": 36, "output_height": 36,
+    "frame_width": 36, "frame_height": 36,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_inventory_slot_hover"}]}
+  },
+  {
+    "asset_id": "ui_hp_bar_fill",
+    "asset_label": "UI: HP Bar Fill",
+    "output_file": "ui_hp_bar_fill.png",
+    "output_width": 1, "output_height": 8,
+    "frame_width": 1, "frame_height": 8,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_hp_bar_fill"}]}
+  },
+  {
+    "asset_id": "ui_hp_bar_bg",
+    "asset_label": "UI: HP Bar Background",
+    "output_file": "ui_hp_bar_bg.png",
+    "output_width": 1, "output_height": 8,
+    "frame_width": 1, "frame_height": 8,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_hp_bar_bg"}]}
+  },
+  {
+    "asset_id": "ui_mp_bar_fill",
+    "asset_label": "UI: MP Bar Fill",
+    "output_file": "ui_mp_bar_fill.png",
+    "output_width": 1, "output_height": 8,
+    "frame_width": 1, "frame_height": 8,
+    "layout_cols": 1, "layout_rows": 1,
+    "transparency_mode": "none",
+    "source": {"mode": "individual", "files": [{"frame_index": 0, "file_key": "ui_mp_bar_fill"}]}
+  }
+]

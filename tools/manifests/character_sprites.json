@@ -1,0 +1,1432 @@
+[
+  {
+    "asset_id": "char_fighter_m",
+    "asset_label": "Fighter (Male)",
+    "output_file": "char_fighter_m.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_fighter_m_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_fighter_m_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_fighter_m_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_fighter_m_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_fighter_m_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_fighter_m_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_fighter_m_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_fighter_m_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_fighter_m_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_fighter_m_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_fighter_m_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_fighter_m_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_fighter_f",
+    "asset_label": "Fighter (Female)",
+    "output_file": "char_fighter_f.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_fighter_f_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_fighter_f_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_fighter_f_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_fighter_f_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_fighter_f_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_fighter_f_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_fighter_f_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_fighter_f_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_fighter_f_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_fighter_f_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_fighter_f_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_fighter_f_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_mage_m",
+    "asset_label": "Mage (Male)",
+    "output_file": "char_mage_m.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_mage_m_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_mage_m_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_mage_m_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_mage_m_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_mage_m_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_mage_m_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_mage_m_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_mage_m_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_mage_m_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_mage_m_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_mage_m_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_mage_m_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_mage_f",
+    "asset_label": "Mage (Female)",
+    "output_file": "char_mage_f.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_mage_f_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_mage_f_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_mage_f_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_mage_f_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_mage_f_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_mage_f_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_mage_f_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_mage_f_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_mage_f_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_mage_f_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_mage_f_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_mage_f_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_thief_m",
+    "asset_label": "Thief (Male)",
+    "output_file": "char_thief_m.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_thief_m_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_thief_m_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_thief_m_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_thief_m_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_thief_m_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_thief_m_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_thief_m_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_thief_m_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_thief_m_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_thief_m_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_thief_m_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_thief_m_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_thief_f",
+    "asset_label": "Thief (Female)",
+    "output_file": "char_thief_f.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_thief_f_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_thief_f_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_thief_f_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_thief_f_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_thief_f_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_thief_f_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_thief_f_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_thief_f_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_thief_f_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_thief_f_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_thief_f_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_thief_f_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_cleric_m",
+    "asset_label": "Cleric (Male)",
+    "output_file": "char_cleric_m.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_cleric_m_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_cleric_m_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_cleric_m_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_cleric_m_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_cleric_m_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_cleric_m_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_cleric_m_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_cleric_m_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_cleric_m_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_cleric_m_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_cleric_m_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_cleric_m_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "char_cleric_f",
+    "asset_label": "Cleric (Female)",
+    "output_file": "char_cleric_f.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "char_cleric_f_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "char_cleric_f_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "char_cleric_f_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "char_cleric_f_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "char_cleric_f_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "char_cleric_f_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "char_cleric_f_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "char_cleric_f_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "char_cleric_f_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "char_cleric_f_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "char_cleric_f_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "char_cleric_f_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_farmer_m",
+    "asset_label": "NPC: Farmer (Male)",
+    "output_file": "npc_farmer_m.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_farmer_m_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_farmer_m_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_farmer_m_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_farmer_m_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_farmer_m_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_farmer_m_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_farmer_m_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_farmer_m_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_farmer_m_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_farmer_m_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_farmer_m_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_farmer_m_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_farmer_f",
+    "asset_label": "NPC: Farmer (Female)",
+    "output_file": "npc_farmer_f.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_farmer_f_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_farmer_f_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_farmer_f_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_farmer_f_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_farmer_f_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_farmer_f_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_farmer_f_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_farmer_f_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_farmer_f_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_farmer_f_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_farmer_f_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_farmer_f_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_merchant",
+    "asset_label": "NPC: Merchant",
+    "output_file": "npc_merchant.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_merchant_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_merchant_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_merchant_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_merchant_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_merchant_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_merchant_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_merchant_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_merchant_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_merchant_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_merchant_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_merchant_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_merchant_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_noble",
+    "asset_label": "NPC: Noble",
+    "output_file": "npc_noble.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_noble_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_noble_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_noble_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_noble_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_noble_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_noble_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_noble_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_noble_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_noble_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_noble_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_noble_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_noble_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_child",
+    "asset_label": "NPC: Child",
+    "output_file": "npc_child.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_child_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_child_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_child_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_child_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_child_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_child_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_child_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_child_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_child_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_child_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_child_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_child_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_guard_light",
+    "asset_label": "NPC: Guard (Light)",
+    "output_file": "npc_guard_light.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_guard_light_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_guard_light_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_guard_light_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_guard_light_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_guard_light_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_guard_light_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_guard_light_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_guard_light_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_guard_light_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_guard_light_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_guard_light_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_guard_light_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_guard_heavy",
+    "asset_label": "NPC: Guard (Heavy)",
+    "output_file": "npc_guard_heavy.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_guard_heavy_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_guard_heavy_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_guard_heavy_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_guard_heavy_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_guard_heavy_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_guard_heavy_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_guard_heavy_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_guard_heavy_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_guard_heavy_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_guard_heavy_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_guard_heavy_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_guard_heavy_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_soldier_enemy",
+    "asset_label": "NPC: Enemy Soldier",
+    "output_file": "npc_soldier_enemy.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_soldier_enemy_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_soldier_enemy_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_soldier_enemy_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_soldier_enemy_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_soldier_enemy_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_soldier_enemy_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_soldier_enemy_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_soldier_enemy_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_soldier_enemy_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_soldier_enemy_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_soldier_enemy_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_soldier_enemy_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_innkeeper",
+    "asset_label": "NPC: Innkeeper",
+    "output_file": "npc_innkeeper.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_innkeeper_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_innkeeper_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_innkeeper_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_innkeeper_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_innkeeper_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_innkeeper_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_innkeeper_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_innkeeper_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_innkeeper_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_innkeeper_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_innkeeper_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_innkeeper_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_priest",
+    "asset_label": "NPC: Priest",
+    "output_file": "npc_priest.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_priest_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_priest_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_priest_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_priest_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_priest_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_priest_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_priest_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_priest_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_priest_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_priest_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_priest_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_priest_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_old_man",
+    "asset_label": "NPC: Old Man",
+    "output_file": "npc_old_man.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_old_man_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_old_man_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_old_man_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_old_man_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_old_man_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_old_man_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_old_man_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_old_man_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_old_man_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_old_man_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_old_man_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_old_man_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_old_woman",
+    "asset_label": "NPC: Old Woman",
+    "output_file": "npc_old_woman.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_old_woman_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_old_woman_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_old_woman_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_old_woman_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_old_woman_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_old_woman_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_old_woman_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_old_woman_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_old_woman_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_old_woman_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_old_woman_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_old_woman_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_scholar",
+    "asset_label": "NPC: Scholar",
+    "output_file": "npc_scholar.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_scholar_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_scholar_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_scholar_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_scholar_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_scholar_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_scholar_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_scholar_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_scholar_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_scholar_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_scholar_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_scholar_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_scholar_w_r"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "npc_blacksmith",
+    "asset_label": "NPC: Blacksmith",
+    "output_file": "npc_blacksmith.png",
+    "output_width": 96,
+    "output_height": 128,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 4,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "npc_blacksmith_s_idle"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "npc_blacksmith_s_l"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "npc_blacksmith_s_r"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "npc_blacksmith_n_idle"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "npc_blacksmith_n_l"
+        },
+        {
+          "frame_index": 5,
+          "file_key": "npc_blacksmith_n_r"
+        },
+        {
+          "frame_index": 6,
+          "file_key": "npc_blacksmith_e_idle"
+        },
+        {
+          "frame_index": 7,
+          "file_key": "npc_blacksmith_e_l"
+        },
+        {
+          "frame_index": 8,
+          "file_key": "npc_blacksmith_e_r"
+        },
+        {
+          "frame_index": 9,
+          "file_key": "npc_blacksmith_w_idle"
+        },
+        {
+          "frame_index": 10,
+          "file_key": "npc_blacksmith_w_l"
+        },
+        {
+          "frame_index": 11,
+          "file_key": "npc_blacksmith_w_r"
+        }
+      ]
+    }
+  }
+]

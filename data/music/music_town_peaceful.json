@@ -1,0 +1,19 @@
+{
+  "profile_id": "music_town_peaceful",
+  "base_mood": "peaceful",
+  "stems": {
+    "base": null,
+    "tension": null,
+    "melody": null
+  },
+  "time_of_day_overrides": {
+    "night":     "mysterious",
+    "midnight":  "mysterious"
+  },
+  "weather_overrides": {
+    "heavy_rain": "tense",
+    "storm":      "tense",
+    "fog":        "mysterious"
+  },
+  "event_flag_overrides": []
+}

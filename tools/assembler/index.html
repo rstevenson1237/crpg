@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRPG Sprite Assembler — Phase 16.5</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --panel:    #161b22;
+      --border:   #30363d;
+      --accent:   #238636;
+      --accent2:  #1f6feb;
+      --warn:     #d29922;
+      --err:      #f85149;
+      --text:     #c9d1d9;
+      --text-dim: #8b949e;
+      --mono:     'Courier New', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e6edf3;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Layout ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 860px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    /* ── File Upload Zone ── */
+    #drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      margin-bottom: 10px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    #drop-zone.drag-over {
+      border-color: var(--accent2);
+      background: rgba(31,111,235,.08);
+    }
+    #drop-zone .drop-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+    #file-input { display: none; }
+
+    #file-list {
+      max-height: 260px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+    }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .file-row:last-child { border-bottom: none; }
+    .file-thumb {
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: #000;
+      flex-shrink: 0;
+    }
+    .file-name { color: var(--text-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-key-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      width: 160px;
+    }
+    .file-key-input:focus { outline: none; border-color: var(--accent2); }
+    .file-remove {
+      background: none;
+      border: none;
+      color: var(--err);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .file-remove:hover { color: #ff7b72; }
+
+    .empty-list { padding: 12px; color: var(--text-dim); font-size: 11px; text-align: center; }
+    #clear-files-btn { margin-top: 8px; }
+
+    /* ── Pipeline Controls ── */
+    .control-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+
+    select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    select:focus { outline: none; border-color: var(--accent2); }
+
+    button {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 5px 12px;
+      white-space: nowrap;
+      transition: background .12s, border-color .12s;
+    }
+    button:hover  { background: #21262d; border-color: #8b949e; }
+    button.primary { background: var(--accent); border-color: #2ea043; color: #fff; }
+    button.primary:hover { background: #2ea043; }
+    button.secondary { background: var(--accent2); border-color: #388bfd; color: #fff; }
+    button.secondary:hover { background: #388bfd; }
+
+    .manifest-info {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      padding: 8px;
+      max-height: 88px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .manifest-info .ok  { color: #3fb950; }
+    .manifest-info .err { color: var(--err); }
+    .manifest-info .key { color: #79c0ff; }
+
+    #log-area {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text);
+      padding: 8px;
+      height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    #log-area .log-ok   { color: #3fb950; }
+    #log-area .log-warn { color: var(--warn); }
+    #log-area .log-err  { color: var(--err); }
+    #log-area .log-dim  { color: var(--text-dim); }
+
+    /* ── Custom manifest textarea ── */
+    #manifest-json-area {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 10px;
+      height: 100px;
+      width: 100%;
+      padding: 8px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+    #manifest-json-area:focus { outline: none; border-color: var(--accent2); }
+
+    /* ── Preview canvas ── */
+    .preview-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 0;
+    }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #preview-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      flex: 1;
+    }
+    #preview-canvas-wrap {
+      overflow: auto;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      min-height: 80px;
+      display: flex;
+      align-items: flex-start;
+    }
+    #preview-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+    }
+
+    /* ── File key tag ── */
+    .key-tag {
+      background: rgba(31,111,235,.15);
+      border: 1px solid rgba(31,111,235,.3);
+      border-radius: 3px;
+      color: #79c0ff;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 1px 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .key-tag.matched { background: rgba(35,134,54,.15); border-color: rgba(35,134,54,.35); color: #3fb950; }
+    .key-tag.missing { background: rgba(248,81,73,.12); border-color: rgba(248,81,73,.3); color: var(--err); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>CRPG Sprite Assembler</h1>
+<p class="subtitle">Phase 16.5 — Art asset pipeline. Runs entirely in-browser. No server required.</p>
+
+<div class="main-grid">
+
+  <!-- ── LEFT: File Upload ── -->
+  <div class="panel">
+    <div class="panel-title">Source Files</div>
+
+    <div id="drop-zone" role="button" tabindex="0" aria-label="Upload image files">
+      <span class="drop-icon">🖼️</span>
+      <strong>Drop PNG/WebP files here</strong><br>
+      or click to browse
+    </div>
+    <input type="file" id="file-input" multiple accept="image/*" />
+
+    <div id="file-list"><div class="empty-list">No files loaded.</div></div>
+    <button id="clear-files-btn">Clear all files</button>
+  </div>
+
+  <!-- ── RIGHT: Pipeline ── -->
+  <div class="panel">
+    <div class="panel-title">Pipeline</div>
+
+    <!-- Manifest selector -->
+    <div class="control-row">
+      <select id="manifest-select" title="Select asset manifest"></select>
+      <button id="btn-preview" class="secondary">Preview</button>
+    </div>
+    <div class="control-row">
+      <button id="btn-run" class="primary">Process This Asset</button>
+      <button id="btn-run-all">Process All Assets</button>
+    </div>
+
+    <!-- Manifest info / required keys -->
+    <div id="manifest-info" class="manifest-info">Select a manifest to see details.</div>
+
+    <!-- Custom / paste manifest -->
+    <div class="panel-title" style="margin-top:10px">Load Custom Manifest JSON</div>
+    <textarea id="manifest-json-area" placeholder='Paste a manifest object { "asset_id": ... } or array [{ ... }, ...]'></textarea>
+    <div class="control-row">
+      <button id="btn-load-json">Load from Textarea</button>
+      <button id="btn-preset-a">Preset A (Mode A)</button>
+      <button id="btn-preset-b">Preset B (Mode B)</button>
+    </div>
+
+    <!-- Log -->
+    <div class="panel-title" style="margin-top:10px">Pipeline Log</div>
+    <div id="log-area"></div>
+    <button id="btn-clear-log" style="margin-top:6px">Clear log</button>
+  </div>
+</div>
+
+<!-- ── Preview canvas ── -->
+<div class="preview-wrap">
+  <div class="preview-header">
+    <div class="panel-title" style="margin-bottom:0">Preview (4× zoom)</div>
+    <div id="preview-label">—</div>
+  </div>
+  <div id="preview-canvas-wrap">
+    <canvas id="preview-canvas"></canvas>
+  </div>
+</div>
+
+<script type="module">
+import { CanvasUtils }     from './canvas_utils.js';
+import { ManifestLibrary, PRESET_A, PRESET_B } from './manifest.js';
+import { Assembler }       from './assembler.js';
+
+// ── State ────────────────────────────────────────────────────────────────────
+const fileMap = new Map();   // fileKey → File
+
+// ── Init manifests ────────────────────────────────────────────────────────────
+const count = ManifestLibrary.initDefaults();
+logLine(`Loaded ${count} built-in manifests.`, 'dim');
+
+// Optionally fetch from JSON files (works when served over HTTP)
+const MANIFEST_FILES = [
+  '../manifests/terrain_tiles.json',
+  '../manifests/character_sprites.json',
+  '../manifests/enemy_sprites.json',
+  '../manifests/item_icons.json',
+  '../manifests/status_icons.json',
+  '../manifests/effect_sprites.json',
+  '../manifests/ui_elements.json',
+];
+
+Promise.all(MANIFEST_FILES.map(url =>
+  ManifestLibrary.fetchFile(url)
+    .then(n => logLine(`Loaded ${n} manifest(s) from ${url.split('/').pop()}`, 'dim'))
+    .catch(() => {/* silently ignore — running offline or from file:// */})
+)).then(() => rebuildSelect());
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const dropZone     = document.getElementById('drop-zone');
+const fileInput    = document.getElementById('file-input');
+const fileListEl   = document.getElementById('file-list');
+const manifestSel  = document.getElementById('manifest-select');
+const manifestInfo = document.getElementById('manifest-info');
+const logArea      = document.getElementById('log-area');
+const previewCanvas= document.getElementById('preview-canvas');
+const previewLabel = document.getElementById('preview-label');
+const previewCtx   = previewCanvas.getContext('2d');
+
+// ── Assembler ─────────────────────────────────────────────────────────────────
+const asm = new Assembler(fileMap, logLine);
+
+// ── File Upload ───────────────────────────────────────────────────────────────
+dropZone.addEventListener('click',    () => fileInput.click());
+dropZone.addEventListener('keydown',  e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave',() => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',     e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  addFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
+document.getElementById('clear-files-btn').addEventListener('click', () => {
+  fileMap.clear();
+  renderFileList();
+  updateManifestInfo();
+});
+
+function addFiles(files) {
+  for (const f of files) {
+    const key = f.name.replace(/\.[^.]+$/, '');  // default key = filename without extension
+    fileMap.set(key, f);
+  }
+  renderFileList();
+  updateManifestInfo();
+  logLine(`Added ${files.length} file(s). Total: ${fileMap.size}`, 'dim');
+}
+
+function renderFileList() {
+  if (fileMap.size === 0) {
+    fileListEl.innerHTML = '<div class="empty-list">No files loaded.</div>';
+    return;
+  }
+  fileListEl.innerHTML = '';
+  for (const [key, file] of fileMap.entries()) {
+    const row  = document.createElement('div');
+    row.className = 'file-row';
+
+    const thumb = document.createElement('img');
+    thumb.className = 'file-thumb';
+    thumb.src = URL.createObjectURL(file);
+    thumb.onload = () => URL.revokeObjectURL(thumb.src);
+
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.title = file.name;
+    name.textContent = file.name;
+
+    const keyInput = document.createElement('input');
+    keyInput.className = 'file-key-input';
+    keyInput.value = key;
+    keyInput.title = 'File key used in manifests';
+    keyInput.addEventListener('change', () => {
+      const newKey = keyInput.value.trim();
+      if (newKey && newKey !== key) {
+        fileMap.delete(key);
+        fileMap.set(newKey, file);
+        renderFileList();
+        updateManifestInfo();
+      }
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'file-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.title = 'Remove file';
+    removeBtn.addEventListener('click', () => {
+      fileMap.delete(key);
+      renderFileList();
+      updateManifestInfo();
+    });
+
+    row.append(thumb, name, keyInput, removeBtn);
+    fileListEl.appendChild(row);
+  }
+}
+
+// ── Manifest Selector ─────────────────────────────────────────────────────────
+function rebuildSelect() {
+  const prev = manifestSel.value;
+  manifestSel.innerHTML = '';
+  const groups = {
+    'Presets':    m => m.asset_id.startsWith('char_fighter_m') || m.asset_id.startsWith('tileset_terrain_sheet'),
+    'Terrain':    m => m.asset_id === 'tileset_terrain',
+    'Characters': m => m.asset_id.startsWith('char_'),
+    'NPCs':       m => m.asset_id.startsWith('npc_'),
+    'Enemies':    m => m.asset_id.startsWith('enemy_'),
+    'Icons':      m => m.asset_id.startsWith('icons_'),
+    'Effects':    m => m.asset_id.startsWith('fx_'),
+    'UI':         m => m.asset_id.startsWith('ui_'),
+    'Other':      () => true,
+  };
+  const used  = new Set();
+  const all   = ManifestLibrary.getAll();
+
+  for (const [groupName, test] of Object.entries(groups)) {
+    const members = all.filter(m => !used.has(m.asset_id) && test(m));
+    if (members.length === 0) continue;
+    const og = document.createElement('optgroup');
+    og.label = groupName;
+    for (const m of members) {
+      used.add(m.asset_id);
+      const opt = document.createElement('option');
+      opt.value = m.asset_id;
+      opt.textContent = m.asset_label ?? m.asset_id;
+      og.appendChild(opt);
+    }
+    manifestSel.appendChild(og);
+  }
+  if (prev && ManifestLibrary.has(prev)) manifestSel.value = prev;
+  updateManifestInfo();
+}
+
+manifestSel.addEventListener('change', updateManifestInfo);
+
+function updateManifestInfo() {
+  const m = ManifestLibrary.get(manifestSel.value);
+  if (!m) { manifestInfo.textContent = 'Select a manifest.'; return; }
+
+  const required = ManifestLibrary.getRequiredFileKeys(m);
+  const { valid, errors } = ManifestLibrary.validate(m);
+
+  let html = `<span class="${valid ? 'ok' : 'err'}">${valid ? '✓' : '✗'} ${m.asset_id}</span>`;
+  html += `  ${m.output_width}×${m.output_height}  frame ${m.frame_width}×${m.frame_height}`;
+  html += `  ${m.layout_cols}×${m.layout_rows}  mode:${m.source.mode}  α:${m.transparency_mode}\n`;
+
+  if (!valid) errors.forEach(e => { html += `<span class="err">  ✗ ${e}</span>\n`; });
+
+  html += `Required file keys (${required.length}):\n`;
+  for (const k of required) {
+    const present = fileMap.has(k);
+    html += `  <span class="${present ? 'ok' : 'err'}">${present ? '✓' : '✗'} <span class="key">${k}</span></span>\n`;
+  }
+  manifestInfo.innerHTML = html;
+}
+
+// ── Pipeline Controls ─────────────────────────────────────────────────────────
+document.getElementById('btn-preview').addEventListener('click', async () => {
+  const id = manifestSel.value;
+  if (!id) return;
+  previewLabel.textContent = `Previewing: ${id}…`;
+  await asm.preview(id, previewCtx);
+  previewLabel.textContent = `Preview: ${id}`;
+});
+
+document.getElementById('btn-run').addEventListener('click', async () => {
+  const id = manifestSel.value;
+  if (!id) return;
+  await asm.run(id);
+});
+
+document.getElementById('btn-run-all').addEventListener('click', () => asm.runAll());
+
+// ── Custom Manifest JSON ──────────────────────────────────────────────────────
+document.getElementById('btn-load-json').addEventListener('click', () => {
+  const json = document.getElementById('manifest-json-area').value.trim();
+  if (!json) return;
+  try {
+    const n = ManifestLibrary.loadJSON(json);
+    logLine(`Loaded ${n} manifest(s) from textarea.`, 'ok');
+    rebuildSelect();
+  } catch (e) {
+    logLine(`✗ JSON parse error: ${e.message}`, 'err');
+  }
+});
+
+document.getElementById('btn-preset-a').addEventListener('click', () => {
+  document.getElementById('manifest-json-area').value = JSON.stringify(PRESET_A, null, 2);
+  logLine('Preset A (Mode A — individual files) loaded into textarea.', 'dim');
+});
+
+document.getElementById('btn-preset-b').addEventListener('click', () => {
+  document.getElementById('manifest-json-area').value = JSON.stringify(PRESET_B, null, 2);
+  logLine('Preset B (Mode B — source sheet remap) loaded into textarea.', 'dim');
+});
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+function logLine(msg, type = '') {
+  const span = document.createElement('span');
+  if (type === 'ok'  || msg.includes(' ✓'))  span.className = 'log-ok';
+  else if (type === 'err'  || msg.includes(' ✗'))  span.className = 'log-err';
+  else if (type === 'warn' || msg.includes(' ⚠'))  span.className = 'log-warn';
+  else if (type === 'dim') span.className = 'log-dim';
+  span.textContent = msg + '\n';
+  logArea.appendChild(span);
+  logArea.scrollTop = logArea.scrollHeight;
+}
+document.getElementById('btn-clear-log').addEventListener('click', () => { logArea.innerHTML = ''; });
+
+// ── Initial select build ──────────────────────────────────────────────────────
+rebuildSelect();
+</script>
+</body>
+</html>
