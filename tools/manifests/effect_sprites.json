@@ -1,0 +1,614 @@
+[
+  {
+    "asset_id": "fx_hit_slash",
+    "asset_label": "FX: Hit Slash",
+    "output_file": "fx_hit_slash.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_hit_slash_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_hit_slash_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_hit_slash_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_hit_blunt",
+    "asset_label": "FX: Hit Blunt",
+    "output_file": "fx_hit_blunt.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_hit_blunt_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_hit_blunt_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_hit_blunt_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_hit_magic",
+    "asset_label": "FX: Hit Magic",
+    "output_file": "fx_hit_magic.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_hit_magic_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_hit_magic_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_hit_magic_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_hit_magic_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_heal",
+    "asset_label": "FX: Heal",
+    "output_file": "fx_heal.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_heal_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_heal_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_heal_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_heal_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_poison_cloud",
+    "asset_label": "FX: Poison Cloud",
+    "output_file": "fx_poison_cloud.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_poison_cloud_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_poison_cloud_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_poison_cloud_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_poison_cloud_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_fire_small",
+    "asset_label": "FX: Fire Small",
+    "output_file": "fx_fire_small.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_fire_small_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_fire_small_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_fire_small_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_fire_small_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_fire_large",
+    "asset_label": "FX: Fire Large",
+    "output_file": "fx_fire_large.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_fire_large_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_fire_large_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_fire_large_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_fire_large_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_magic_bolt",
+    "asset_label": "FX: Magic Bolt",
+    "output_file": "fx_magic_bolt.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_magic_bolt_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_magic_bolt_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_magic_bolt_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_barrier",
+    "asset_label": "FX: Barrier",
+    "output_file": "fx_barrier.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_barrier_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_barrier_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_barrier_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_turn_undead",
+    "asset_label": "FX: Turn Undead",
+    "output_file": "fx_turn_undead.png",
+    "output_width": 160,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 5,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_turn_undead_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_turn_undead_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_turn_undead_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_turn_undead_3"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "fx_turn_undead_4"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_consecrate",
+    "asset_label": "FX: Consecrate",
+    "output_file": "fx_consecrate.png",
+    "output_width": 240,
+    "output_height": 48,
+    "frame_width": 48,
+    "frame_height": 48,
+    "layout_cols": 5,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_consecrate_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_consecrate_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_consecrate_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_consecrate_3"
+        },
+        {
+          "frame_index": 4,
+          "file_key": "fx_consecrate_4"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_secret_discover",
+    "asset_label": "FX: Secret Discover",
+    "output_file": "fx_secret_discover.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_secret_discover_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_secret_discover_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_secret_discover_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_secret_discover_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_level_transition",
+    "asset_label": "FX: Level Transition",
+    "output_file": "fx_level_transition.png",
+    "output_width": 128,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_level_transition_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_level_transition_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_level_transition_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_level_transition_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_torch_radius",
+    "asset_label": "FX: Torch Radius",
+    "output_file": "fx_torch_radius.png",
+    "output_width": 64,
+    "output_height": 64,
+    "frame_width": 64,
+    "frame_height": 64,
+    "layout_cols": 1,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_torch_radius_0"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_shadow_step",
+    "asset_label": "FX: Shadow Step",
+    "output_file": "fx_shadow_step.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_shadow_step_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_shadow_step_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_shadow_step_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_backstab",
+    "asset_label": "FX: Backstab",
+    "output_file": "fx_backstab.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_backstab_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_backstab_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_backstab_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_rain_particle",
+    "asset_label": "FX: Rain Particle",
+    "output_file": "fx_rain_particle.png",
+    "output_width": 64,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 2,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_rain_particle_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_rain_particle_1"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_snow_particle",
+    "asset_label": "FX: Snow Particle",
+    "output_file": "fx_snow_particle.png",
+    "output_width": 96,
+    "output_height": 32,
+    "frame_width": 32,
+    "frame_height": 32,
+    "layout_cols": 3,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_snow_particle_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_snow_particle_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_snow_particle_2"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_fog_overlay",
+    "asset_label": "FX: Fog Overlay",
+    "output_file": "fx_fog_overlay.png",
+    "output_width": 512,
+    "output_height": 128,
+    "frame_width": 128,
+    "frame_height": 128,
+    "layout_cols": 4,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_fog_overlay_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_fog_overlay_1"
+        },
+        {
+          "frame_index": 2,
+          "file_key": "fx_fog_overlay_2"
+        },
+        {
+          "frame_index": 3,
+          "file_key": "fx_fog_overlay_3"
+        }
+      ]
+    }
+  },
+  {
+    "asset_id": "fx_lightning_flash",
+    "asset_label": "FX: Lightning Flash",
+    "output_file": "fx_lightning_flash.png",
+    "output_width": 1280,
+    "output_height": 480,
+    "frame_width": 640,
+    "frame_height": 480,
+    "layout_cols": 2,
+    "layout_rows": 1,
+    "transparency_mode": "magic_pink",
+    "source": {
+      "mode": "individual",
+      "files": [
+        {
+          "frame_index": 0,
+          "file_key": "fx_lightning_flash_0"
+        },
+        {
+          "frame_index": 1,
+          "file_key": "fx_lightning_flash_1"
+        }
+      ]
+    }
+  }
+]
